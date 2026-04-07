@@ -5,16 +5,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
-  { to: '/dashboard/marketplace', icon: Store, label: 'Marketplace' },
-  { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
-  { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Transactions' },
-  { to: '/dashboard/kyc', icon: ShieldCheck, label: 'KYC' },
-  { to: '/dashboard/profile', icon: User, label: 'Profile' },
-  { to: '/dashboard/support', icon: HelpCircle, label: 'Support' },
-];
-
 const NAV_STEP_MAP = {
   3: '/dashboard/marketplace',
   6: '/dashboard/portfolio',
@@ -23,7 +13,17 @@ const NAV_STEP_MAP = {
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const { logout, tourStep, advanceTour } = useApp();
+  const { logout, tourStep, advanceTour, isKycVerified } = useApp();
+
+  const navItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
+    { to: '/dashboard/marketplace', icon: Store, label: 'Marketplace' },
+    { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
+    { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Transactions' },
+    ...(!isKycVerified ? [{ to: '/dashboard/kyc', icon: ShieldCheck, label: 'KYC' }] : []),
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+    { to: '/dashboard/support', icon: HelpCircle, label: 'Support' },
+  ];
 
   const tourNavTarget = NAV_STEP_MAP[tourStep] || null;
   const isTourActive = tourStep !== null;

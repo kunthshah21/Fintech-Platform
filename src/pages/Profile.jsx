@@ -65,7 +65,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl space-y-4">
+    <div className="w-full max-w-2xl mx-auto space-y-4">
       <h1 className="text-xl font-semibold text-text-primary mb-6">Profile & settings</h1>
 
       {/* Personal Info */}

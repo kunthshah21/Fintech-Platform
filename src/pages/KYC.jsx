@@ -63,9 +63,24 @@ function PANStep({ data, onChange, onVerify }) {
 
   const formatPAN = (v) => v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
   const isValidPAN = /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(data.number);
+  const isEligibleAge = (dob) => {
+    if (!dob) return false;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    if (Number.isNaN(birthDate.getTime())) return false;
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age -= 1;
+    }
+    return age >= 18;
+  };
 
   const handleVerify = () => {
     if (!isValidPAN) { setError('Please enter a valid PAN (e.g., ABCDE1234F)'); return; }
+    if (!data.dob) { setError('Please enter your date of birth'); return; }
+    if (!isEligibleAge(data.dob)) { setError('KYC is only available for users aged 18 or above'); return; }
     setError('');
     setVerifying(true);
     setTimeout(() => {
