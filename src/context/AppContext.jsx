@@ -36,10 +36,11 @@ export function AppProvider({ children }) {
   const [walletBalance, setWalletBalance] = useState(saved?.walletBalance ?? userPortfolio.walletBalance);
   const [notifications, setNotifications] = useState(saved?.notifications || defaultNotifications);
   const [watchlist, setWatchlist] = useState(saved?.watchlist || []);
+  const [viewMode, setViewMode] = useState(saved?.viewMode || 'chat');
 
   useEffect(() => {
-    saveState({ user, kyc, portfolio, walletBalance, notifications, watchlist });
-  }, [user, kyc, portfolio, walletBalance, notifications, watchlist]);
+    saveState({ user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode });
+  }, [user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode]);
 
   const updateKyc = useCallback((updates) => {
     setKyc((prev) => ({ ...prev, ...updates }));
@@ -94,6 +95,7 @@ export function AppProvider({ children }) {
     walletBalance, setWalletBalance,
     notifications, markNotificationRead, markAllNotificationsRead, unreadCount,
     watchlist, toggleWatchlist,
+    viewMode, setViewMode,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
