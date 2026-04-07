@@ -1,20 +1,20 @@
-# Rocket.new — Design System & Style Guidelines
+# YieldVest — Design System & Style Guidelines
 
-A comprehensive design reference extracted from [rocket.new](https://www.rocket.new) for building visually consistent websites in the same style.
+The definitive design reference for the YieldVest platform. All new pages, components, and features must follow these guidelines to maintain visual consistency.
 
 ---
 
 ## 1. Design Philosophy
 
-Rocket.new follows a **dark, cinematic, high-contrast** aesthetic rooted in:
+YieldVest follows a **light, minimal, card-driven** aesthetic rooted in:
 
-- **Bold confidence** — large, unapologetic typography that commands attention
-- **Space & depth** — generous negative space with layered visuals and glowing elements
-- **Minimal UI chrome** — the interface stays out of the way; content and imagery do the talking
-- **Futuristic warmth** — dark backgrounds paired with warm amber/orange accents instead of cold blues, making the "tech" aesthetic feel human and energetic
-- **Immersive full-bleed sections** — full-width background images and gradients create a cinematic feel between content sections
+- **Quiet confidence** — clean typography that communicates trust without shouting
+- **Generous whitespace** — content breathes; every element earns its place on the page
+- **Card-first layout** — information is organized into bordered, contained cards with subtle shadows
+- **Restrained color** — a near-monochrome palette with a single muted accent; no bright or "pop-up" colors
+- **Formal professionalism** — the design should feel like an institutional financial product, not a flashy startup
 
-The overall experience feels like a **premium SaaS product** meets a **bold startup landing page** — fast, confident, and visually rich without being cluttered.
+The overall experience should feel like a **premium fintech platform** — trustworthy, precise, and understated. Think Linear, Stripe, or Mercury — not Robinhood.
 
 ---
 
@@ -22,35 +22,30 @@ The overall experience feels like a **premium SaaS product** meets a **bold star
 
 ### Core Colors
 
-| Role | Value | Usage |
-|------|-------|-------|
-| **Background (Primary)** | `#0A0A0A` / `#0D0D0D` | Page background, section fills |
-| **Background (Elevated)** | `#111111` / `#141414` | Cards, modals, nav |
-| **Background (Surface)** | `#1A1A1A` / `#1E1E1E` | Subtle containers, input fields |
-| **Border / Divider** | `#222222` / `#2A2A2A` | Subtle lines, card borders |
-| **Text (Primary)** | `#FFFFFF` | Headlines, primary content |
-| **Text (Secondary)** | `#A0A0A0` / `#888888` | Body copy, descriptions |
-| **Text (Muted)** | `#555555` / `#444444` | Captions, metadata |
-| **Accent (Primary)** | `#F97316` / `#FB923C` | Orange — CTAs, active states, highlights |
-| **Accent (Warm)** | `#FBBF24` / `#F59E0B` | Amber — gradient partner to orange |
-| **Accent (Glow)** | `rgba(249,115,22,0.15)` | Glow effects around accent elements |
-
-### Accent Gradient
-
-```css
-/* Primary CTA gradient */
-background: linear-gradient(135deg, #F97316, #FBBF24);
-
-/* Subtle warm glow */
-background: radial-gradient(ellipse at center, rgba(249,115,22,0.2) 0%, transparent 70%);
-```
+| Role | Tailwind Token | Value | Usage |
+|------|----------------|-------|-------|
+| **Background (Primary)** | `bg` | `#FFFFFF` | Page background, white sections |
+| **Background (Alternate)** | `bg-alt` | `#F9FAFB` | Alternating sections, input fields, icon containers |
+| **Background (Elevated)** | `bg-elevated` | `#FFFFFF` | Cards, modals, elevated surfaces |
+| **Border** | `border` | `#E5E7EB` | Card borders, dividers, input outlines |
+| **Border (Light)** | `border-light` | `#F3F4F6` | Very subtle separators |
+| **Text (Primary)** | `text-primary` | `#111827` | Headlines, card titles, primary content |
+| **Text (Secondary)** | `text-secondary` | `#6B7280` | Body copy, descriptions, nav links |
+| **Text (Muted)** | `text-muted` | `#9CA3AF` | Captions, metadata, section labels, placeholders |
+| **Accent** | `accent` | `#18181B` | Primary CTA buttons, inverted CTA blocks |
+| **Accent (Soft)** | `accent-soft` | `#F4F4F5` | Hover states on light backgrounds |
+| **Green** | `green` | `#059669` | Positive indicators (return rates, online status, logo icon) |
+| **Green (Soft)** | `green-soft` | `#ECFDF5` | Return rate badge background |
 
 ### Usage Principles
 
-- The page is **dark-first** — never use white backgrounds
-- Orange/amber accents are used **sparingly** — reserved for CTAs, numbered step indicators, highlighted text, and interactive states
-- Avoid cold accent colors (blues, purples, cyans) — the warmth of amber/orange is core to the brand feel
-- Glassmorphism is used subtly — `backdrop-filter: blur()` on nav and overlays
+- The page is **light-first** — white and light gray backgrounds only
+- The primary accent is **near-black** (`#18181B`) — used for CTA buttons and the inverted CTA section
+- **Green** (`#059669`) is used sparingly — only for return rate badges, the logo icon, and positive status indicators
+- **Never** use orange, amber, yellow, bright blue, or any saturated "pop" color
+- No gradients on buttons or text — all fills are flat, solid colors
+- Borders are always `#E5E7EB` — thin (1px), never heavy
+- Card hover states use `shadow-md` — no color shifts on borders
 
 ---
 
@@ -59,84 +54,65 @@ background: radial-gradient(ellipse at center, rgba(249,115,22,0.2) 0%, transpar
 ### Font Stack
 
 ```css
-/* Display / Headings */
-font-family: 'Geist', 'Inter', -apple-system, sans-serif;
-
-/* Body / UI */
-font-family: 'Geist', 'Inter', -apple-system, sans-serif;
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 ```
 
-> Rocket.new uses a clean, modern sans-serif with tight letter-spacing on headings and slightly relaxed spacing on body text. The feel is **geometric and precise**, not humanist or playful.
+Inter is used for everything — headings, body, UI elements. No secondary typeface.
 
 ### Type Scale
 
-| Element | Size | Weight | Line Height | Letter Spacing |
-|---------|------|--------|-------------|----------------|
-| **Hero Headline** | `clamp(3rem, 7vw, 6rem)` | 700–800 | 1.0–1.05 | `-0.03em` |
-| **Section Headline** | `clamp(2rem, 4vw, 3.5rem)` | 700 | 1.1 | `-0.02em` |
-| **Sub-headline** | `1.5rem–2rem` | 600 | 1.2 | `-0.01em` |
-| **Body (Large)** | `1.125rem` | 400 | 1.7 | `0` |
-| **Body (Default)** | `1rem` | 400 | 1.6 | `0` |
-| **Caption / Label** | `0.75rem–0.875rem` | 500 | 1.4 | `0.05em` |
-| **Nav Links** | `0.9rem` | 500 | — | `0.01em` |
-| **CTA Button** | `1rem–1.125rem` | 600 | — | `0.01em` |
+| Element | Size | Weight | Line Height | Letter Spacing | Tailwind Classes |
+|---------|------|--------|-------------|----------------|------------------|
+| **Hero Headline** | `clamp(2.25rem, 5vw, 4rem)` | 600 (semibold) | 1.1 | `-0.025em` | `text-[clamp(2.25rem,5vw,4rem)] font-semibold leading-[1.1] tracking-[-0.025em]` |
+| **Section Headline** | `1.875rem` / `2.25rem` | 600 (semibold) | 1.1 | `-0.02em` | `text-3xl sm:text-4xl font-semibold tracking-[-0.02em]` |
+| **Card Title** | `1rem` | 600 (semibold) | — | — | `text-base font-semibold` |
+| **Body (Large)** | `1.125rem` | 400 (regular) | 1.625 | `0` | `text-lg leading-relaxed` |
+| **Body (Default)** | `1rem` | 400 (regular) | 1.625 | `0` | `text-base leading-relaxed` |
+| **Body (Small)** | `0.875rem` | 400 (regular) | 1.625 | `0` | `text-sm leading-relaxed` |
+| **Section Label** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium text-text-muted` |
+| **Nav Links** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium text-text-secondary` |
+| **CTA Button Text** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium` |
+| **Caption / Label** | `0.75rem` | 500–600 | — | `wider` | `text-xs font-semibold uppercase tracking-wider` |
 
 ### Typographic Patterns
 
-- **Multi-line hero headlines** — each line is its own `<span>` or block element, sometimes with alternating weights or colors
-- **Gradient text** on key phrases: `background: linear-gradient(90deg, #F97316, #FBBF24); -webkit-background-clip: text; color: transparent;`
-- **"Typewriter" / rotating word** effect inside headlines (e.g., "mobile app | web app | dashboard")
-- Uppercase small labels (`letter-spacing: 0.1em`) before section headings act as category tags
-- Numbers in step-by-step sections use a different weight/color (orange accent) to visually separate them from content text
+- **Headings use `font-semibold` (600)** — never `bold` (700) or `extrabold` (800). This keeps the tone formal without being aggressive.
+- **Sentence case for all headings** — "One platform, every opportunity" not "One Platform, Every Opportunity"
+- **Single accent word in hero** — one word in the hero headline is colored `text-green` for subtle emphasis. No gradient text.
+- **Section labels** are plain `text-sm font-medium text-text-muted` placed above the heading — not uppercase, not colored. They serve as quiet category markers.
+- **No decorative type effects** — no gradient text, no typewriter animations, no rotating words
 
 ---
 
 ## 4. Spacing & Layout
 
-### Grid
+### Container
 
 ```css
-/* Container */
-max-width: 1280px;
+max-width: 72rem; /* 1152px — Tailwind max-w-6xl */
 margin: 0 auto;
-padding: 0 24px; /* mobile */
-padding: 0 48px; /* tablet */
-padding: 0 80px; /* desktop */
-```
-
-### Spacing Scale
-
-```css
---space-1:  4px;
---space-2:  8px;
---space-3:  12px;
---space-4:  16px;
---space-5:  24px;
---space-6:  32px;
---space-7:  48px;
---space-8:  64px;
---space-9:  96px;
---space-10: 128px;
---space-11: 160px;
---space-12: 200px;
+padding: 0 24px; /* px-6 */
 ```
 
 ### Section Rhythm
 
-- **Vertical padding per section**: `80px–160px` (desktop), `48px–80px` (mobile)
-- **Space between headline and body**: `24px–32px`
-- **Space between body and CTA**: `32px–48px`
-- **Card internal padding**: `24px–32px`
-- Sections separated by **full-bleed image/video dividers** rather than plain horizontal rules
+| Property | Desktop | Mobile |
+|----------|---------|--------|
+| **Vertical section padding** | `128px` (`py-32`) | `96px` (`py-24`) |
+| **Space: label to heading** | `8px` (`mb-2`) | `8px` |
+| **Space: heading to body** | `16px` (`mb-4`) | `16px` |
+| **Space: section header to content** | `64px` (`mb-16`) | `64px` |
+| **Card gap** | `16px` (`gap-4`) | `16px` |
+| **Card internal padding** | `24px` (`p-6`) | `24px` |
 
 ### Layout Patterns
 
-- **Split layout** (50/50): Feature explanation on left, numbered steps / visual on right
-- **Centered hero**: Text centered, full-width background visual behind it
-- **Asymmetric feature rows**: Text-heavy left column with staggered visual elements on right
-- **Testimonial grid**: Dual-column scrolling marquee on dark background
-- Template section uses **horizontal pill-tab navigation** above a single preview pane
-- Step indicators use `1.1`, `1.2`, `1.3` decimal numbering, left-aligned
+- **Centered hero** — text centered, constrained to `max-w-3xl` (48rem)
+- **Left-aligned section headers** — headings are flush-left with a muted label above and description below
+- **Card grids** — `grid gap-4 sm:grid-cols-2 lg:grid-cols-3` for feature cards
+- **50/50 split** — `grid lg:grid-cols-2 gap-12 lg:gap-20` for content + visual sections (AI Chat)
+- **Alternating backgrounds** — sections alternate between `bg` (white) and `bg-alt` (#F9FAFB) for visual rhythm without dividers
+- **No decorative dividers** — section separation comes purely from background color alternation and padding
 
 ---
 
@@ -144,199 +120,136 @@ padding: 0 80px; /* desktop */
 
 ### Navigation
 
-```css
-/* Floating / sticky nav */
-position: sticky; top: 0;
-background: rgba(10,10,10,0.8);
-backdrop-filter: blur(16px);
-border-bottom: 1px solid #1E1E1E;
-padding: 0 48px;
-height: 64px;
-z-index: 100;
+```
+Fixed top, white/frosted glass background, single bottom border.
 ```
 
-- Logo on far left
-- Nav links centered or slightly right
-- CTA button ("Sign in / Sign up") on far right — text or ghost style
-- No heavy shadows; relies on the blur + border for depth
+| Property | Value | Tailwind |
+|----------|-------|----------|
+| Position | Fixed, full-width, z-50 | `fixed top-0 left-0 right-0 z-50` |
+| Background | White at 80% opacity + blur | `bg-white/80 backdrop-blur-xl` |
+| Border | Bottom, `#E5E7EB` | `border-b border-border` |
+| Height | 64px | `h-16` |
+| Logo | `text-lg font-semibold` with green icon | — |
+| Nav links | `text-sm font-medium text-text-secondary` | hover → `text-text-primary` |
+| CTA button | Solid `bg-accent` (near-black), white text | `rounded-lg bg-accent px-5 py-2` |
+| Mobile | Hamburger toggle, dropdown with same styles | `md:hidden` / `md:flex` |
 
 ### Buttons
 
-```css
-/* Primary CTA */
-.btn-primary {
-  background: linear-gradient(135deg, #F97316, #FBBF24);
-  color: #000;
-  font-weight: 600;
-  border-radius: 8px;
-  padding: 12px 28px;
-  border: none;
-  font-size: 1rem;
-  transition: opacity 0.2s, transform 0.2s;
-}
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary / Ghost */
-.btn-ghost {
-  background: transparent;
-  color: #fff;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 10px 24px;
-  font-weight: 500;
-  transition: border-color 0.2s, background 0.2s;
-}
-.btn-ghost:hover {
-  border-color: #F97316;
-  background: rgba(249,115,22,0.05);
-}
-
-/* Text / Link CTA (in-page) */
-.btn-text {
-  color: #F97316;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+**Primary CTA**
+```
+Solid near-black background, white text. No gradients. Subtle opacity on hover.
 ```
 
-### Badge / Tag Pill
+```css
+/* Tailwind */
+rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white
+transition-colors hover:bg-accent/90
+```
+
+**Secondary / Ghost**
+```
+White background, border, dark text. Light fill on hover.
+```
 
 ```css
-/* "New" badge before headline */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(249,115,22,0.1);
-  border: 1px solid rgba(249,115,22,0.3);
-  color: #F97316;
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
+/* Tailwind */
+rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-text-primary
+transition-colors hover:bg-bg-alt
+```
+
+**Inverted (on dark backgrounds)**
+```
+White background, accent-colored text. Used inside the CTA section.
+```
+
+```css
+/* Tailwind */
+rounded-lg bg-white px-6 py-2.5 text-sm font-medium text-accent
+transition-colors hover:bg-white/90
+```
+
+### Badge / Pill
+
+```
+Subtle bordered pill used above the hero headline. Neutral colors only.
+```
+
+```css
+/* Tailwind */
+inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-alt
+px-3.5 py-1 text-xs font-medium text-text-secondary
 ```
 
 ### Cards
 
-```css
-.card {
-  background: #111111;
-  border: 1px solid #1E1E1E;
-  border-radius: 16px;
-  padding: 28px;
-  transition: border-color 0.2s, transform 0.2s;
-}
-.card:hover {
-  border-color: rgba(249,115,22,0.3);
-  transform: translateY(-2px);
-}
+```
+White background, thin border, rounded corners. Shadow on hover.
 ```
 
-### Testimonial Card
-
 ```css
-.testimonial {
-  background: #111;
-  border: 1px solid #222;
-  border-radius: 12px;
-  padding: 20px 24px;
-  max-width: 360px;
-}
-.testimonial-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.testimonial-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #fff;
-}
-.testimonial-handle {
-  font-size: 0.8rem;
-  color: #666;
-}
-.testimonial-quote {
-  font-size: 0.9rem;
-  color: #aaa;
-  line-height: 1.6;
-  margin-top: 12px;
-}
+/* Tailwind */
+rounded-xl border border-border bg-white p-6
+transition-shadow hover:shadow-md
 ```
 
-### Step List (Numbered Features)
+- Internal icon containers: `rounded-lg bg-bg-alt p-2.5` with `text-text-secondary` icons
+- Card titles: `text-base font-semibold text-text-primary`
+- Card body: `text-sm leading-relaxed text-text-secondary`
+- Return badges (where applicable): `rounded-md bg-green-soft px-2.5 py-0.5 text-sm font-medium text-green`
+
+### Step Cards (How It Works)
+
+Same as standard cards, with the step number displayed large and faded in the top-right corner:
 
 ```css
-.step-number {
-  color: #F97316;
-  font-weight: 700;
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
-  min-width: 32px;
-}
-.step-text {
-  color: #D0D0D0;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
+/* Step number */
+text-2xl font-semibold tabular-nums text-border
+/* e.g., "01", "02", "03" */
 ```
 
-### Tab Navigation (Templates)
+The icon and number sit in a row with `justify-between` at the top of the card.
 
-```css
-.tab-nav {
-  display: flex;
-  gap: 4px;
-  background: #111;
-  border-radius: 999px;
-  padding: 4px;
-  width: fit-content;
-}
-.tab {
-  padding: 6px 18px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #888;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.tab.active {
-  background: #1E1E1E;
-  color: #fff;
-}
+### Chat Mockup (AI Advisor)
+
+```
+Standard bordered card (rounded-xl border border-border bg-white shadow-sm) containing:
+- Header: avatar circle + name/status, separated by border-b
+- Messages: user bubbles (bg-accent text-white), AI bubbles (bg-bg-alt text-text-secondary)
+- Input: bordered input mock at the bottom
 ```
 
-### FAQ Accordion
+User message bubbles use `rounded-2xl rounded-br-md bg-accent text-white`.
+AI message bubbles use `rounded-2xl rounded-bl-md bg-bg-alt text-text-secondary`.
+
+### Feature List (Benefit Items)
+
+```
+Icon in a bg-bg-alt rounded-lg container on the left.
+Title (text-sm font-semibold text-text-primary) and description (text-sm text-text-secondary) on the right.
+Stacked vertically with space-y-5.
+```
+
+### CTA Section (Inverted)
+
+```
+Solid bg-accent (near-black) rounded-2xl card. Centered text.
+Heading and body in white. Button is inverted (bg-white text-accent).
+```
 
 ```css
-.faq-item {
-  border-bottom: 1px solid #1E1E1E;
-  padding: 20px 0;
-}
-.faq-question {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.faq-answer {
-  font-size: 0.9rem;
-  color: #888;
-  line-height: 1.7;
-  margin-top: 12px;
-}
+/* Tailwind */
+rounded-2xl bg-accent px-8 py-16 sm:px-16 sm:py-20 text-center
+```
+
+### Footer
+
+```
+White background, border-t border-border. 4-column grid on desktop.
+Column headers: text-xs font-semibold uppercase tracking-wider text-text-muted
+Links: text-sm text-text-secondary hover:text-text-primary
+Bottom bar: border-t, text-xs text-text-muted, flex justify-between
 ```
 
 ---
@@ -345,47 +258,44 @@ z-index: 100;
 
 ### Background Treatments
 
-- **Full-bleed image sections**: Critical cinematic moments (hero, "how it works", footer) use full-width `.webp` images as section backgrounds — dark, atmospheric, slightly blurred edges
-- **Radial glow**: Soft orange/amber radial gradient centered under hero text
-  ```css
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(249,115,22,0.12), transparent);
-  ```
-- **Noise texture overlay** (subtle): `opacity: 0.03` grain on dark backgrounds adds depth
-- **Grid dot pattern** on dark backgrounds for subtle texture:
-  ```css
-  background-image: radial-gradient(circle, #333 1px, transparent 1px);
-  background-size: 32px 32px;
-  ```
+- **No background decorations** — no dot grids, no radial glows, no animated blobs, no noise textures
+- Section depth is achieved through **background color alternation** (white ↔ #F9FAFB) only
+- The hero section is a clean white background — no visual effects behind it
 
 ### Animations & Motion
 
-- **Marquee / infinite scroll**: Testimonials and logo strips use CSS `@keyframes` infinite horizontal scroll
-  ```css
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-  .marquee-track { animation: marquee 30s linear infinite; }
-  ```
-- **Fade-in on scroll**: Sections animate in with `opacity: 0 → 1` and `translateY(20px → 0)` using Intersection Observer
-- **Typewriter / text rotation**: Hero headline cycles through words with a blinking cursor `|`
-- **Hover lifts**: Cards and buttons use `transform: translateY(-2px)` on hover
-- **Staggered reveals**: Feature list items appear sequentially with `animation-delay`
+Framer Motion is used for **subtle entrance animations only**:
+
+- **Fade-in on scroll**: `opacity: 0 → 1` with `translateY(16px → 0)` using `whileInView`
+- **Staggered card reveals**: Cards in grids use sequential `animation-delay` (0.06s per card)
+- **Duration**: All animations use `duration: 0.4s` — fast and crisp, never slow or dramatic
+- **No hover animations on cards** — cards use CSS `transition-shadow` for hover, not transform/translate
+- **No marquees, no typewriter effects, no parallax**
+
+### Shadows
+
+| Use Case | Value | Tailwind |
+|----------|-------|----------|
+| **Default card** | None (border only) | — |
+| **Card hover** | `0 4px 6px -1px rgba(0,0,0,0.1)` | `shadow-md` |
+| **Chat mockup** | `0 1px 2px rgba(0,0,0,0.05)` | `shadow-sm` |
+| **CTA section** | None | — |
 
 ### Dividers
 
-- No plain `<hr>` lines — dividers are atmospheric full-bleed images or gradient fades to black
-- Between sections: `background: linear-gradient(to bottom, transparent, #0A0A0A)` overlay at section edges
+- Section-level dividers come from background color changes — no `<hr>` or gradient fades
+- Within sections, `border-t border-border` is used sparingly (footer bottom bar, chat input separator)
 
 ---
 
-## 7. Iconography & Media
+## 7. Iconography
 
-- **No icon library clutter** — icons are minimal and purposeful; custom SVGs or very simple geometric shapes
-- Avatar images use circular crop (`border-radius: 50%`), ~40–48px size
-- Product screenshots / template previews use subtle rounded corners (`border-radius: 12px`) and a faint border (`1px solid #222`)
-- Images are `.webp` format, loaded via `srcset` for performance
-- No decorative stock photography — imagery is either product UI screenshots or abstract/atmospheric photography
+- **Lucide React** is the icon library — no other icon sets
+- Icons are **20px** (`h-5 w-5`) as the default size, **16px** (`h-4 w-4`) for smaller contexts (buttons, trust items)
+- Icon color is always `text-text-secondary` (#6B7280) — never colored or accented (except the logo icon which uses `text-green`)
+- Icon containers use `rounded-lg bg-bg-alt p-2.5` — a soft gray background
+- Avatars use `rounded-full bg-bg-alt` as containers
+- No decorative icons — every icon serves a functional purpose
 
 ---
 
@@ -393,163 +303,142 @@ z-index: 100;
 
 ### Hero Section
 ```
-[Navbar]
-[Badge pill: "New – Rocket Mobile is here →"]
-[H1: "Think It. Type It. Launch It."]
-[H2 with rotating word: "Build production-ready [web app | mobile app | dashboard]"]
-[Trust signal: "Trusted by 1M+ users in 180+ countries"]
-[Logo strip marquee]
-[Full-bleed background image]
+[Navbar — fixed, white frosted glass]
+[Badge pill — "AI-Powered Alternative Investments"]
+[H1 — centered, max-w-3xl, one word in text-green]
+[Body paragraph — centered, max-w-xl, text-text-secondary]
+[Two buttons — primary (dark) + secondary (ghost border)]
+[Trust indicators — small muted text with tiny icons]
 ```
 
-### Feature/How-It-Works Section
+### Features Section (bg-alt)
 ```
-[Section label (uppercase, muted)]
-[H2: Bold two-line headline]
-[Body paragraph]
-[Pill tab row: "One prompt | Backend | Launch | Templates"]
-[Left: numbered step list]  [Right: product screenshot/visual]
-[Inline CTA: "Try it →"]
-```
-
-### Testimonials Section
-```
-[H2: "Happiness speaks"]
-[Subtext: user count + countries]
-[Full-bleed dark background image]
-[Dual-row infinite marquee of testimonial cards]
+[Section label — "Investment Options", text-sm text-text-muted]
+[H2 — left-aligned, text-3xl/4xl]
+[Body paragraph — left-aligned, max-w-xl]
+[Card grid — 3 columns, white cards on gray bg]
+  [Each card: icon container → title → description → return badge]
 ```
 
-### FAQ Section
+### AI Advisor Section (bg-white)
 ```
-[H2: centered]
-[Accordion list: question/answer pairs]
-[Support footer: links to docs, tutorials, Discord]
+[50/50 split grid]
+  [Left: label → H2 → body → feature list with icons]
+  [Right: chat mockup card with header, messages, input]
 ```
 
-### Footer CTA Section
+### How It Works Section (bg-alt)
 ```
-[Full-bleed atmospheric image]
-[Large H2: "Start building, now!"]
-[Subtext tagline]
-[Standard footer: copyright + legal links]
+[Section label → H2 → body paragraph]
+[3-column card grid]
+  [Each card: icon + step number (faded) → title → description]
+```
+
+### CTA Section (bg-white, contains dark card)
+```
+[Rounded dark (bg-accent) card, centered within max-w-6xl]
+  [H2 — white text]
+  [Body — white/70 text]
+  [Button — inverted white, text-accent]
+```
+
+### Footer (bg-white, border-t)
+```
+[4-column grid: brand + 3 link columns]
+[Bottom bar: copyright left, disclaimer right]
 ```
 
 ---
 
 ## 9. Responsive Behavior
 
-| Breakpoint | Behavior |
-|------------|----------|
-| `< 640px` (mobile) | Single column, reduced heading sizes, full-width CTAs, stacked nav |
-| `640–1024px` (tablet) | Two columns for features, slightly reduced padding |
-| `> 1024px` (desktop) | Full layout as described above |
+| Breakpoint | Tailwind Prefix | Behavior |
+|------------|-----------------|----------|
+| `< 640px` (mobile) | default | Single column, full-width buttons stacked, hamburger nav, `py-24` sections |
+| `640–768px` (sm) | `sm:` | Two-column card grids, inline buttons, `py-32` sections |
+| `768–1024px` (md) | `md:` | Desktop nav visible (`md:flex`), three-column grids |
+| `> 1024px` (lg) | `lg:` | 50/50 splits for AI section, full three-column grids |
 
-- Font sizes use `clamp()` to scale fluidly
-- Navigation collapses to hamburger on mobile
-- The typewriter / rotating word effect persists across all breakpoints
-- Marquees slow down on mobile for readability
+- Hero headline uses `clamp(2.25rem, 5vw, 4rem)` for fluid scaling
+- Section headings use `text-3xl sm:text-4xl` (responsive step)
+- Container max-width is `max-w-6xl` (1152px) with `px-6` padding
+- Navigation collapses to hamburger below `md` (768px)
 
 ---
 
 ## 10. Voice & Copy Style
 
-While not strictly visual, the copy tone shapes how the design reads:
+The copy tone is **professional, clear, and understated**:
 
-- **Short, punchy headlines** — often imperative or declarative ("Think It. Type It. Launch It.")
-- **Contrasting two-part headlines** — `[Bold claim] + [qualifier]` across two lines
-- **Self-aware confidence** — "No kidding." / "Seriously." as parenthetical asides
-- **Numbered sub-points** use decimal notation (1.1, 1.2, 1.3) to feel systematic and credible
-- **Social proof leads** — user count + countries appears prominently near the hero
-- **CTAs are action-first**: "Start building", "Try it", "Launch your idea, now" — not passive ("Learn more")
+- **Sentence case for all headings** — "Three steps to get started" not "Three Steps To Get Started"
+- **No exclamation marks** in headings
+- **No slang, no informality** — "No kidding" and "Seriously" are not appropriate
+- **Concise descriptions** — one sentence per card description, two sentences max per section body
+- **Question-form CTAs** where appropriate — "Ready to invest smarter?" rather than "Start Now!"
+- **Action verbs in buttons** — "Get Started", "Create Free Account", "Learn More"
+- **Trust language is subtle** — small muted text, not large bold claims
+- **Section labels are descriptive** — "Investment Options", "AI Advisor", "How It Works"
 
 ---
 
-## 11. CSS Custom Properties Reference
+## 11. Tailwind Theme Configuration (index.css)
 
 ```css
-:root {
-  /* Colors */
-  --color-bg:           #0A0A0A;
-  --color-bg-elevated:  #111111;
-  --color-bg-surface:   #1A1A1A;
-  --color-border:       #1E1E1E;
-  --color-border-light: #2A2A2A;
+@import "tailwindcss";
 
-  --color-text-primary:   #FFFFFF;
-  --color-text-secondary: #A0A0A0;
-  --color-text-muted:     #555555;
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --color-accent:         #F97316;
-  --color-accent-warm:    #FBBF24;
-  --color-accent-glow:    rgba(249, 115, 22, 0.15);
+  --color-bg: #FFFFFF;
+  --color-bg-alt: #F9FAFB;
+  --color-bg-elevated: #FFFFFF;
 
-  /* Typography */
-  --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-weight-regular: 400;
-  --font-weight-medium:  500;
-  --font-weight-semibold: 600;
-  --font-weight-bold:    700;
-  --font-weight-extrabold: 800;
+  --color-border: #E5E7EB;
+  --color-border-light: #F3F4F6;
 
-  /* Spacing */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3:  12px;
-  --space-4:  16px;
-  --space-5:  24px;
-  --space-6:  32px;
-  --space-7:  48px;
-  --space-8:  64px;
-  --space-9:  96px;
-  --space-10: 128px;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
 
-  /* Radii */
-  --radius-sm:   6px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
-  --radius-full: 999px;
-
-  /* Shadows */
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
-  --shadow-glow: 0 0 40px rgba(249,115,22,0.2);
-
-  /* Transitions */
-  --transition-fast:   0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow:   0.4s ease;
-
-  /* Layout */
-  --container-max: 1280px;
-  --nav-height:    64px;
+  --color-accent: #18181B;
+  --color-accent-soft: #F4F4F5;
+  --color-green: #059669;
+  --color-green-soft: #ECFDF5;
 }
 ```
+
+These tokens are available as Tailwind utilities: `bg-bg`, `text-text-primary`, `border-border`, `bg-accent`, `text-green`, `bg-green-soft`, etc.
 
 ---
 
 ## 12. Do's and Don'ts
 
-### ✅ Do
-- Use a near-black background as the base for all pages
-- Rely on orange/amber for all accent moments — buttons, highlights, numbers, hover states
-- Use full-bleed atmospheric images as section separators / hero backgrounds
-- Let whitespace breathe — generous padding between sections
-- Make headlines huge and confident
-- Use marquee animations for social proof (logos, testimonials)
-- Apply subtle border + glassmorphism on nav
-- Use decimal-numbered steps (1.1, 1.2, 1.3) for feature breakdowns
+### Do
 
-### ❌ Don't
-- Use light/white backgrounds
-- Use blue, purple, or green as primary accent colors
-- Add heavy drop shadows or loud gradients on text (gradient text is fine, gradient backgrounds on text blocks are not)
-- Over-animate — motion should feel purposeful, not frantic
-- Use more than 2 typefaces
-- Crowd content — maintain generous vertical rhythm
-- Use flat button designs with no depth or interaction state
-- Use generic stock photography
+- Use white and light gray (#F9FAFB) as the only background colors
+- Use near-black (#18181B) for primary CTA buttons — solid, no gradients
+- Use muted green (#059669) sparingly — return badges and logo icon only
+- Keep typography at `font-semibold` (600) max for headings
+- Use bordered, white cards with subtle hover shadows for all content blocks
+- Maintain generous padding (py-24 / py-32) between sections
+- Use sentence case for all headings
+- Alternate section backgrounds (white → gray → white) for rhythm
+- Keep animations fast (0.4s) and subtle (16px translateY + opacity)
+- Use Lucide React for all icons, colored `text-text-secondary`
+
+### Don't
+
+- Use dark/black backgrounds (except the single CTA section card)
+- Use orange, amber, yellow, bright blue, purple, or any saturated accent
+- Use gradient fills on buttons, text, or backgrounds
+- Use animated blobs, dot grids, radial glows, or noise textures
+- Use `font-bold` (700) or `font-extrabold` (800) for headings
+- Use Title Case or ALL CAPS for section headings (uppercase is OK for tiny labels only)
+- Use decorative stock photography or illustration
+- Over-animate — no marquees, parallax, typewriter effects, or hover transforms on cards
+- Add drop shadows to anything except hover states on cards
+- Use more than one typeface
 
 ---
 
-*Design extracted from [rocket.new](https://www.rocket.new) — April 2026*
+*YieldVest Design System — April 2026*
