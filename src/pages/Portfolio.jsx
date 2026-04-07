@@ -5,7 +5,7 @@ import { IndianRupee, TrendingUp, PiggyBank, Percent, Download, LayoutGrid, List
 import { useApp } from '../context/AppContext';
 import {
   activeInvestments, completedInvestments, monthlyReturns,
-  allocationData, opportunities, userPortfolio,
+  opportunities,
 } from '../data/mockData';
 
 const statusStyles = {
@@ -27,18 +27,28 @@ function PortfolioTooltip({ active, payload, label }) {
 }
 
 export default function Portfolio() {
-  const { watchlist, toggleWatchlist, isNewUser, portfolio } = useApp();
+  const { watchlist, toggleWatchlist, portfolio, userInvestments } = useApp();
   const [activeTab, setActiveTab] = useState(0);
   const [viewMode, setViewMode] = useState('table');
 
   const tabs = ['Active Investments', 'Completed', 'Watchlist', 'Cancelled'];
   const watchlistedOpps = opportunities.filter((o) => watchlist.includes(o.id));
 
-  const total = allocationData.reduce((s, d) => s + d.value, 0);
-  const maxAlloc = Math.max(...allocationData.map((d) => d.value / total));
+  const hasInvestments = userInvestments.length > 0;
+  const allocationMap = userInvestments.reduce((acc, inv) => {
+    acc[inv.productType] = (acc[inv.productType] || 0) + inv.amountInvested;
+    return acc;
+  }, {});
+  const dynamicAllocationData = Object.entries(allocationMap).map(([name, value], idx) => ({
+    name,
+    value,
+    color: ['#18181B', '#6B7280', '#059669', '#9CA3AF', '#D1D5DB'][idx % 5],
+  }));
+  const total = dynamicAllocationData.reduce((s, d) => s + d.value, 0);
+  const maxAlloc = total > 0 ? Math.max(...dynamicAllocationData.map((d) => d.value / total)) : 0;
   const concentrationWarning = maxAlloc > 0.4;
 
-  if (isNewUser) {
+  if (!hasInvestments) {
     return (
       <div className="max-w-6xl space-y-6">
         <div data-tour="portfolio-summary" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -81,10 +91,10 @@ export default function Portfolio() {
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: IndianRupee, label: 'Total invested', value: `₹${userPortfolio.totalInvested.toLocaleString('en-IN')}` },
-          { icon: TrendingUp, label: 'Current value', value: `₹${userPortfolio.currentValue.toLocaleString('en-IN')}` },
-          { icon: PiggyBank, label: 'Total returns', value: `₹${userPortfolio.totalReturns.toLocaleString('en-IN')}` },
-          { icon: Percent, label: 'XIRR', value: `${userPortfolio.xirr}%` },
+          { icon: IndianRupee, label: 'Total invested', value: `₹${portfolio.totalInvested.toLocaleString('en-IN')}` },
+          { icon: TrendingUp, label: 'Current value', value: `₹${portfolio.currentValue.toLocaleString('en-IN')}` },
+          { icon: PiggyBank, label: 'Total returns', value: `₹${portfolio.totalReturns.toLocaleString('en-IN')}` },
+          { icon: Percent, label: 'XIRR', value: `${portfolio.xirr}%` },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-border bg-white p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -136,7 +146,7 @@ export default function Portfolio() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
-                  {activeInvestments.map((inv) => {
+                  {userInvestments.map((inv) => {
                     const s = statusStyles[inv.status] || statusStyles.on_track;
                     return (
                       <tr key={inv.id} className="hover:bg-bg-alt/50 transition-colors">
@@ -164,7 +174,7 @@ export default function Portfolio() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {activeInvestments.map((inv) => {
+              {userInvestments.map((inv) => {
                 const s = statusStyles[inv.status] || statusStyles.on_track;
                 return (
                   <div key={inv.id} className="rounded-xl border border-border bg-white p-5">
@@ -279,7 +289,7 @@ export default function Portfolio() {
           </div>
         )}
         <div className="space-y-2">
-          {allocationData.map((d) => {
+          {dynamicAllocationData.map((d) => {
             const pct = ((d.value / total) * 100).toFixed(0);
             return (
               <div key={d.name}>

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   defaultUser, userPortfolio, notifications as defaultNotifications,
-  registeredUsers, emptyPortfolio, opportunities,
+  registeredUsers, emptyPortfolio, opportunities, activeInvestments,
 } from '../data/mockData';
 
 const AppContext = createContext(null);
@@ -74,6 +74,9 @@ export function AppProvider({ children }) {
   const [user, setUser] = useState(saved?.user || defaultUser);
   const [kyc, setKyc] = useState(saved?.kyc || initialKyc);
   const [portfolio, setPortfolio] = useState(saved?.portfolio || userPortfolio);
+  const [userInvestments, setUserInvestments] = useState(
+    saved?.userInvestments || (saved?.isNewUser ? [] : activeInvestments)
+  );
   const [walletBalance, setWalletBalance] = useState(saved?.walletBalance ?? userPortfolio.walletBalance);
   const [notifications, setNotifications] = useState(saved?.notifications || defaultNotifications);
   const [watchlist, setWatchlist] = useState(saved?.watchlist || []);
@@ -82,9 +85,9 @@ export function AppProvider({ children }) {
   useEffect(() => {
     saveState({
       isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
-      user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode,
+      user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode,
     });
-  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode]);
+  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode]);
 
   const login = useCallback((username, password) => {
     const key = username.toLowerCase();
@@ -93,6 +96,7 @@ export function AppProvider({ children }) {
 
     setUser(record.user);
     setPortfolio(record.portfolio);
+    setUserInvestments(activeInvestments);
     setWalletBalance(record.portfolio.walletBalance);
     setNotifications(defaultNotifications);
     setKyc(saved?.kyc?.status === 'verified' ? saved.kyc : initialKyc);
@@ -115,6 +119,7 @@ export function AppProvider({ children }) {
     };
     setUser(newUser);
     setPortfolio(emptyPortfolio);
+    setUserInvestments([]);
     setWalletBalance(0);
     setKyc({ ...initialKyc, aadhaar: { method: 'digilocker', verified: true }, currentStep: 1, status: 'in_progress' });
     setNotifications([
@@ -139,6 +144,7 @@ export function AppProvider({ children }) {
     };
     setUser(newUser);
     setPortfolio(emptyPortfolio);
+    setUserInvestments([]);
     setWalletBalance(0);
     setKyc(initialKyc);
     setNotifications([
@@ -164,6 +170,7 @@ export function AppProvider({ children }) {
     setUser(defaultUser);
     setKyc(initialKyc);
     setPortfolio(userPortfolio);
+    setUserInvestments(activeInvestments);
     setWalletBalance(userPortfolio.walletBalance);
     setNotifications(defaultNotifications);
     setWatchlist([]);
@@ -236,6 +243,72 @@ export function AppProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
+  const createInvestment = useCallback(({ opportunity, amount, paymentMethod }) => {
+    const now = new Date();
+    const maturityDate = new Date(now);
+    maturityDate.setMonth(maturityDate.getMonth() + opportunity.tenureMonths);
+    const nextRepayment = new Date(now);
+    if (opportunity.paymentFrequency === 'Monthly') {
+      nextRepayment.setMonth(nextRepayment.getMonth() + 1);
+    } else {
+      nextRepayment.setMonth(nextRepayment.getMonth() + Math.max(1, Math.ceil(opportunity.tenureMonths / 2)));
+    }
+
+    const expectedReturns = Math.round(amount * (opportunity.returnRate / 100) * (opportunity.tenureMonths / 12));
+    const investment = {
+      id: `inv-${Date.now().toString(36)}`,
+      opportunityId: opportunity.id,
+      name: `${opportunity.issuer} ${opportunity.productType}`,
+      productType: opportunity.productType,
+      amountInvested: amount,
+      currentValue: amount,
+      returnsEarned: 0,
+      returnPercent: 0,
+      startDate: now.toISOString().split('T')[0],
+      maturityDate: maturityDate.toISOString().split('T')[0],
+      nextRepayment: nextRepayment.toISOString().split('T')[0],
+      status: 'on_track',
+    };
+
+    setUserInvestments((prev) => [investment, ...prev]);
+    setPortfolio((prev) => {
+      const totalInvested = prev.totalInvested + amount;
+      const currentValue = prev.currentValue + amount + expectedReturns;
+      const totalReturns = currentValue - totalInvested;
+      const xirr = totalInvested > 0
+        ? Number((((prev.xirr * prev.totalInvested) + (opportunity.returnRate * amount)) / totalInvested).toFixed(2))
+        : opportunity.returnRate;
+
+      return {
+        ...prev,
+        totalInvested,
+        currentValue,
+        totalReturns,
+        returnPercent: totalInvested > 0 ? Number(((totalReturns / totalInvested) * 100).toFixed(2)) : 0,
+        activeInvestments: (prev.activeInvestments || 0) + 1,
+        xirr,
+      };
+    });
+
+    if (paymentMethod === 'wallet') {
+      setWalletBalance((prev) => Math.max(0, prev - amount));
+    }
+
+    setNotifications((prev) => [
+      {
+        id: `n-invest-${Date.now().toString(36)}`,
+        type: 'investment',
+        title: 'Investment confirmed',
+        message: `Your investment of Rs ${amount.toLocaleString('en-IN')} in ${opportunity.issuer} is now active.`,
+        time: 'Just now',
+        read: false,
+      },
+      ...prev,
+    ]);
+
+    setIsNewUser(false);
+  }, []);
+
   const isKycVerified = kyc.status === 'verified';
   const unreadCount = notifications.filter((n) => !n.read).length;
   const recommendations = getRecommendations(onboardingAnswers);
@@ -247,6 +320,7 @@ export function AppProvider({ children }) {
     user, setUser,
     kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified,
     portfolio, setPortfolio,
+    userInvestments, createInvestment,
     walletBalance, setWalletBalance,
     notifications, markNotificationRead, markAllNotificationsRead, unreadCount,
     watchlist, toggleWatchlist,

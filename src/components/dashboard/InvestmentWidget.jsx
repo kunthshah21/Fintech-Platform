@@ -5,7 +5,7 @@ import { ShieldCheck, ArrowRight, Check, X, Loader2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 export default function InvestmentWidget({ opportunity }) {
-  const { isKycVerified, walletBalance } = useApp();
+  const { isKycVerified, walletBalance, createInvestment } = useApp();
   const navigate = useNavigate();
   const [amount, setAmount] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -33,6 +33,11 @@ export default function InvestmentWidget({ opportunity }) {
   const handleConfirm = () => {
     setProcessing(true);
     setTimeout(() => {
+      createInvestment({
+        opportunity: o,
+        amount: investAmount,
+        paymentMethod,
+      });
       setProcessing(false);
       setInvestStep(5);
     }, 2000);
