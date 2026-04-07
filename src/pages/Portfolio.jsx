@@ -41,7 +41,7 @@ export default function Portfolio() {
   if (isNewUser) {
     return (
       <div className="max-w-6xl space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-tour="portfolio-summary" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { icon: IndianRupee, label: 'Total invested', value: '₹0' },
             { icon: TrendingUp, label: 'Current value', value: '₹0' },
@@ -57,7 +57,7 @@ export default function Portfolio() {
             </div>
           ))}
         </div>
-        <div className="rounded-xl border border-border bg-white p-12 text-center">
+        <div data-tour="portfolio-cta" className="rounded-xl border border-border bg-white p-12 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-bg-alt mb-4">
             <Briefcase className="h-7 w-7 text-text-muted" />
           </div>

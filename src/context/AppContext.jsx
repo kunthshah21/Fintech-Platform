@@ -124,6 +124,7 @@ export function AppProvider({ children }) {
     setIsAuthenticated(true);
     setIsNewUser(true);
     setHasSeenTour(false);
+    setTourStep(0);
     setOnboardingAnswers(null);
   }, []);
 
@@ -148,6 +149,7 @@ export function AppProvider({ children }) {
     setIsAuthenticated(true);
     setIsNewUser(true);
     setHasSeenTour(false);
+    setTourStep(0);
     setViewMode('standard');
   }, []);
 
@@ -157,6 +159,7 @@ export function AppProvider({ children }) {
     setIsAuthenticated(false);
     setIsNewUser(false);
     setHasSeenTour(false);
+    setTourStep(null);
     setOnboardingAnswers(null);
     setUser(defaultUser);
     setKyc(initialKyc);
@@ -167,8 +170,27 @@ export function AppProvider({ children }) {
     setViewMode('chat');
   }, []);
 
+  const [tourStep, setTourStep] = useState(() => {
+    if (saved?.hasSeenTour) return null;
+    if (saved?.isNewUser && !saved?.hasSeenTour) return 0;
+    return null;
+  });
+
   const completeTour = useCallback(() => {
     setHasSeenTour(true);
+    setTourStep(null);
+  }, []);
+
+  const advanceTour = useCallback(() => {
+    setTourStep((prev) => {
+      if (prev === null) return null;
+      const next = prev + 1;
+      if (next > 11) {
+        setHasSeenTour(true);
+        return null;
+      }
+      return next;
+    });
   }, []);
 
   const updateKyc = useCallback((updates) => {
@@ -221,6 +243,7 @@ export function AppProvider({ children }) {
   const value = {
     isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
     login, loginWithDigiLocker, registerNewUser, logout, completeTour,
+    tourStep, setTourStep, advanceTour,
     user, setUser,
     kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified,
     portfolio, setPortfolio,

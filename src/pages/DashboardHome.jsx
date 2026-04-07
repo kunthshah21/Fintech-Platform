@@ -11,8 +11,6 @@ import RepaymentWidget from '../components/dashboard/RepaymentWidget';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
 import QuickActions from '../components/dashboard/QuickActions';
 import RoboChat from '../components/dashboard/RoboChat';
-import WelcomeTour from '../components/dashboard/WelcomeTour';
-
 export default function DashboardHome() {
   const { portfolio, viewMode, setViewMode, isNewUser, hasSeenTour, recommendations } = useApp();
 
@@ -21,8 +19,6 @@ export default function DashboardHome() {
 
   return (
     <div className="max-w-6xl">
-      {isNewUser && !hasSeenTour && <WelcomeTour />}
-
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           {isChat ? (
@@ -79,7 +75,7 @@ export default function DashboardHome() {
           >
             <KYCBanner />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div data-tour="stat-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
                 icon={IndianRupee}
                 label="Total invested"
@@ -123,7 +119,7 @@ export default function DashboardHome() {
               </div>
             </div>
 
-            <div>
+            <div data-tour="recommendations">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-text-primary">
                   {isNewUser ? 'Best matches for your profile' : 'Recommended for you'}

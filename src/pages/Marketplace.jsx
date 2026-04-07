@@ -109,7 +109,7 @@ export default function Marketplace() {
         <FilterSidebar filters={filters} onChange={setFilters} onReset={() => setFilters(defaultFilters)} />
 
         <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+          <div data-tour="marketplace-search" className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
               <input
@@ -166,7 +166,7 @@ export default function Marketplace() {
               </label>
             </div>
           ) : (
-            <div className={
+            <div data-tour="marketplace-cards" className={
               viewMode === 'grid'
                 ? 'grid grid-cols-1 sm:grid-cols-2 gap-4'
                 : 'space-y-3'

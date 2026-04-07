@@ -511,7 +511,7 @@ export default function KYC() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div data-tour="kyc-start" className="max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-text-primary">KYC verification</h1>
         <p className="mt-1 text-sm text-text-secondary">Complete these 4 steps to start investing. Your progress is saved automatically.</p>

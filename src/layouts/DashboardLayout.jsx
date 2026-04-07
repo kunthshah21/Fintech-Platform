@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/dashboard/Sidebar';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import MobileTabBar from '../components/dashboard/MobileTabBar';
+import WelcomeTour from '../components/dashboard/WelcomeTour';
 
 export default function DashboardLayout() {
   return (
@@ -14,6 +15,7 @@ export default function DashboardLayout() {
         </main>
       </div>
       <MobileTabBar />
+      <WelcomeTour />
     </div>
   );
 }
