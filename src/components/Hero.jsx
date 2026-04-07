@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Users, BadgeCheck } from 'lucide-react';
+import { Shield, Users, BadgeCheck, ArrowRight } from 'lucide-react';
 
 const trustItems = [
   { icon: Users, label: '10,000+ Investors' },
@@ -12,80 +12,69 @@ export default function Hero() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-20">
-      {/* Abstract animated background */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 -top-40 h-[600px] w-[600px] animate-[spin_25s_linear_infinite] rounded-full bg-accent-500/20 blur-[120px]" />
-        <div className="absolute -bottom-20 -right-20 h-[500px] w-[500px] animate-[spin_30s_linear_infinite_reverse] rounded-full bg-emerald-500/15 blur-[120px]" />
-        <div className="absolute left-1/2 top-1/3 h-[400px] w-[400px] -translate-x-1/2 animate-[pulse_8s_ease-in-out_infinite] rounded-full bg-accent-400/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--color-navy-950)_70%)]" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+    <section className="relative flex min-h-[90vh] items-center justify-center pt-16">
+      <div className="mx-auto max-w-3xl px-6 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
         >
-          <span className="mb-6 inline-block rounded-full border border-accent-500/30 bg-accent-500/10 px-4 py-1.5 text-sm font-medium text-accent-300">
-            Alternative Investments Made Simple
+          <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-alt px-3.5 py-1 text-xs font-medium text-text-secondary">
+            AI-Powered Alternative Investments
           </span>
         </motion.div>
 
         <motion.h1
-          className="mb-6 text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl lg:text-7xl"
-          initial={{ opacity: 0, y: 30 }}
+          className="mb-5 text-[clamp(2.25rem,5vw,4rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-text-primary"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.15 }}
+          transition={{ duration: 0.5, delay: 0.08 }}
         >
-          Unlock Higher Yields with{' '}
-          <span className="bg-gradient-to-r from-accent-400 to-emerald-400 bg-clip-text text-transparent">
-            Smarter Investments
-          </span>
+          Higher yields, one{' '}
+          <span className="text-green">trusted</span> platform
         </motion.h1>
 
         <motion.p
-          className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-navy-300 sm:text-xl"
-          initial={{ opacity: 0, y: 30 }}
+          className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-text-secondary"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.16 }}
         >
-          Access curated alternative investment opportunities — from invoice discounting
-          and P2P lending to private credit — earning{' '}
-          <span className="font-semibold text-emerald-400">10–18% annual returns</span>,
-          all on a single trusted platform.
+          Access curated alternative investments — invoice discounting, P2P lending,
+          and private credit — earning 10–18% annual returns, all with
+          AI-guided portfolio recommendations.
         </motion.p>
 
         <motion.div
-          className="mb-16 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
-          initial={{ opacity: 0, y: 30 }}
+          className="mb-14 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.45 }}
+          transition={{ duration: 0.5, delay: 0.24 }}
         >
           <button
             onClick={() => navigate('/onboarding')}
-            className="group relative rounded-xl bg-accent-500 px-8 py-4 text-lg font-semibold text-white shadow-2xl shadow-accent-500/25 transition-all hover:bg-accent-600 hover:shadow-accent-500/40"
+            className="group inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
           >
-            Get Started — It's Free
-            <span className="absolute inset-0 rounded-xl bg-white/10 opacity-0 transition-opacity group-hover:opacity-100" />
+            Get Started
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
           <a
             href="#features"
-            className="rounded-xl border border-white/20 px-8 py-4 text-lg font-medium text-white transition-all hover:border-white/40 hover:bg-white/5"
+            className="rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-bg-alt"
           >
-            Explore Options
+            Learn More
           </a>
         </motion.div>
 
         <motion.div
-          className="flex flex-wrap items-center justify-center gap-8"
+          className="flex flex-wrap items-center justify-center gap-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.7 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
           {trustItems.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2 text-sm text-navy-400">
-              <Icon className="h-4 w-4 text-emerald-400" />
+            <div key={label} className="flex items-center gap-1.5 text-sm text-text-muted">
+              <Icon className="h-3.5 w-3.5" />
               {label}
             </div>
           ))}

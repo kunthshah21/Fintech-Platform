@@ -5,13 +5,13 @@ const features = [
   {
     icon: FileText,
     title: 'Invoice Discounting',
-    description: 'Earn steady returns by financing verified business invoices with short tenures and low default rates.',
+    description: 'Finance verified business invoices with short tenures and low default rates for steady returns.',
     returns: '10–14%',
   },
   {
     icon: Users,
     title: 'P2P Lending',
-    description: 'Lend directly to vetted borrowers and earn attractive interest rates with diversified risk.',
+    description: 'Lend directly to vetted borrowers and earn attractive interest with diversified risk profiles.',
     returns: '11–16%',
   },
   {
@@ -35,38 +35,36 @@ const features = [
 ];
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, delay: i * 0.1 },
+    transition: { duration: 0.4, delay: i * 0.06 },
   }),
 };
 
 export default function Features() {
   return (
-    <section id="features" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6">
+    <section id="features" className="bg-bg-alt py-24 sm:py-32">
+      <div className="mx-auto max-w-6xl px-6">
         <motion.div
-          className="mb-16 text-center"
-          initial={{ opacity: 0, y: 30 }}
+          className="mb-16"
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
         >
-          <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent-400">
-            Investment Options
-          </span>
-          <h2 className="mb-4 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-            One Platform, All Solutions
+          <p className="mb-2 text-sm font-medium text-text-muted">Investment Options</p>
+          <h2 className="mb-4 text-3xl font-semibold tracking-[-0.02em] text-text-primary sm:text-4xl">
+            One platform, every opportunity
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-navy-400">
-            Discover a curated marketplace of alternative investments, each vetted for
-            quality and designed to maximize your returns.
+          <p className="max-w-xl text-base leading-relaxed text-text-secondary">
+            A curated marketplace of alternative investments, each rigorously vetted
+            and designed to help you earn beyond traditional fixed income.
           </p>
         </motion.div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feat, i) => {
             const Icon = feat.icon;
             return (
@@ -77,18 +75,18 @@ export default function Features() {
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
-                className="group rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm transition-all hover:border-accent-500/30 hover:bg-white/[0.08]"
+                className="rounded-xl border border-border bg-white p-6 transition-shadow hover:shadow-md"
               >
-                <div className="mb-4 inline-flex rounded-xl bg-accent-500/10 p-3">
-                  <Icon className="h-6 w-6 text-accent-400" />
+                <div className="mb-4 inline-flex rounded-lg bg-bg-alt p-2.5">
+                  <Icon className="h-5 w-5 text-text-secondary" />
                 </div>
-                <h3 className="mb-2 text-xl font-semibold text-white">{feat.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-navy-400">
+                <h3 className="mb-1.5 text-base font-semibold text-text-primary">{feat.title}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-text-secondary">
                   {feat.description}
                 </p>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-400">
+                <span className="inline-flex rounded-md bg-green-soft px-2.5 py-0.5 text-sm font-medium text-green">
                   {feat.returns} p.a.
-                </div>
+                </span>
               </motion.div>
             );
           })}

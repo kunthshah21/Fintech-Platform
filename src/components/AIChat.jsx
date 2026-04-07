@@ -5,107 +5,96 @@ const chatMessages = [
   { role: 'user', text: "I have ₹5L to invest. I want moderate risk with good returns." },
   {
     role: 'ai',
-    text: "Based on your profile, I'd recommend a split: 40% in Invoice Discounting (12% p.a.), 35% in P2P Lending (14% p.a.), and 25% in Private Credit (13% p.a.). This gives an estimated blended return of ~13% with moderate risk.",
+    text: "Based on your profile, I'd recommend: 40% Invoice Discounting (12% p.a.), 35% P2P Lending (14% p.a.), and 25% Private Credit (13% p.a.). Blended return: ~13%.",
   },
-  { role: 'user', text: 'Can I start with a smaller amount first?' },
+  { role: 'user', text: 'Can I start with a smaller amount?' },
   {
     role: 'ai',
-    text: 'Absolutely! You can start with as little as ₹10,000. I\'ll adjust the allocation proportionally. Would you like to proceed?',
+    text: "Of course — you can begin with as little as ₹10,000. I'll adjust the allocation proportionally. Ready to proceed?",
   },
 ];
 
 const benefits = [
   {
     icon: MessageCircle,
-    title: 'Chat Naturally',
+    title: 'Natural language interface',
     description: 'Ask questions in plain language — no financial jargon required.',
   },
   {
     icon: Target,
-    title: 'Personalized Picks',
-    description: 'Get investment recommendations tailored to your risk appetite and goals.',
+    title: 'Personalized recommendations',
+    description: 'Get investment picks tailored to your risk appetite and goals.',
   },
   {
     icon: Sparkles,
-    title: 'Smart Rebalancing',
-    description: 'AI monitors your portfolio and suggests optimizations in real time.',
+    title: 'Continuous optimization',
+    description: 'AI monitors your portfolio and suggests rebalancing in real time.',
   },
 ];
 
 export default function AIChat() {
   return (
-    <section id="ai-advisor" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
-          {/* Copy side */}
+    <section id="ai-advisor" className="py-24 sm:py-32">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.4 }}
           >
-            <span className="mb-4 inline-block text-sm font-semibold uppercase tracking-widest text-accent-400">
-              AI-Powered Advisor
-            </span>
-            <h2 className="mb-6 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-              Your Personal Investment{' '}
-              <span className="bg-gradient-to-r from-accent-400 to-emerald-400 bg-clip-text text-transparent">
-                AI Guide
-              </span>
+            <p className="mb-2 text-sm font-medium text-text-muted">AI Advisor</p>
+            <h2 className="mb-4 text-3xl font-semibold tracking-[-0.02em] text-text-primary sm:text-4xl">
+              Your personal investment guide
             </h2>
-            <p className="mb-10 text-lg leading-relaxed text-navy-400">
-              Not sure where to start? Our AI advisor chats with you to understand your
-              financial goals, risk tolerance, and investment horizon — then recommends
-              the perfect portfolio mix, just for you.
+            <p className="mb-10 text-base leading-relaxed text-text-secondary">
+              Our AI advisor understands your financial goals, risk tolerance,
+              and time horizon — then builds the right portfolio for you.
             </p>
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               {benefits.map(({ icon: Icon, title, description }) => (
                 <div key={title} className="flex gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-500/10">
-                    <Icon className="h-5 w-5 text-accent-400" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-bg-alt">
+                    <Icon className="h-4 w-4 text-text-secondary" />
                   </div>
                   <div>
-                    <h4 className="mb-1 font-semibold text-white">{title}</h4>
-                    <p className="text-sm text-navy-400">{description}</p>
+                    <h4 className="mb-0.5 text-sm font-semibold text-text-primary">{title}</h4>
+                    <p className="text-sm leading-relaxed text-text-secondary">{description}</p>
                   </div>
                 </div>
               ))}
             </div>
           </motion.div>
 
-          {/* Chat mockup side */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative"
+            transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <div className="rounded-2xl border border-white/10 bg-navy-900/80 shadow-2xl backdrop-blur-xl">
-              {/* Chat header */}
-              <div className="flex items-center gap-3 border-b border-white/10 px-6 py-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-500/20">
-                  <Bot className="h-5 w-5 text-accent-400" />
+            <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+              <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-bg-alt">
+                  <Bot className="h-4 w-4 text-text-secondary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">YieldVest AI</p>
-                  <p className="text-xs text-emerald-400">Online</p>
+                  <p className="text-sm font-medium text-text-primary">YieldVest AI</p>
+                  <p className="text-xs text-green">Online</p>
                 </div>
               </div>
 
-              {/* Chat messages */}
-              <div className="space-y-4 p-6">
+              <div className="space-y-3 p-5">
                 {chatMessages.map((msg, i) => (
                   <div
                     key={i}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                         msg.role === 'user'
-                          ? 'rounded-br-md bg-accent-500 text-white'
-                          : 'rounded-bl-md border border-white/10 bg-white/5 text-navy-200'
+                          ? 'rounded-br-md bg-accent text-white'
+                          : 'rounded-bl-md bg-bg-alt text-text-secondary'
                       }`}
                     >
                       {msg.text}
@@ -114,17 +103,13 @@ export default function AIChat() {
                 ))}
               </div>
 
-              {/* Chat input */}
-              <div className="border-t border-white/10 px-6 py-4">
-                <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                  <span className="flex-1 text-sm text-navy-500">Ask about your investments...</span>
-                  <Send className="h-4 w-4 text-accent-400" />
+              <div className="border-t border-border px-5 py-3.5">
+                <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-alt px-4 py-2.5">
+                  <span className="flex-1 text-sm text-text-muted">Ask about your investments...</span>
+                  <Send className="h-4 w-4 text-text-muted" />
                 </div>
               </div>
             </div>
-
-            {/* Glow effect behind card */}
-            <div className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl bg-accent-500/5 blur-2xl" />
           </motion.div>
         </div>
       </div>
