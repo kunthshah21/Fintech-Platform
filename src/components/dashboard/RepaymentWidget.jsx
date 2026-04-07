@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { upcomingRepayments } from '../../data/mockData';
+import { useApp } from '../../context/AppContext';
 
 const statusStyles = {
   on_track: { label: 'On track', classes: 'bg-green-soft text-green' },
@@ -9,6 +10,23 @@ const statusStyles = {
 };
 
 export default function RepaymentWidget() {
+  const { isNewUser } = useApp();
+
+  if (isNewUser) {
+    return (
+      <div className="rounded-xl border border-border bg-white p-5">
+        <h3 className="text-sm font-semibold text-text-primary mb-4">Upcoming repayments</h3>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-bg-alt mb-3">
+            <Calendar className="h-5 w-5 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">No upcoming repayments</p>
+          <p className="text-xs text-text-muted mt-1">Repayment schedules appear here once you invest.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-border bg-white p-5">
       <div className="flex items-center justify-between mb-4">

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { Wallet, Plus, ArrowDownToLine, Download, FileText } from 'lucide-react';
+import { Wallet, Plus, ArrowDownToLine, Download, FileText, ArrowLeftRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { transactions } from '../data/mockData';
+import { transactions as mockTransactions } from '../data/mockData';
 
 const typeLabels = {
   investment: { label: 'Investment', classes: 'bg-accent-soft text-accent' },
@@ -18,13 +18,42 @@ const statusStyles = {
 };
 
 export default function Transactions() {
-  const { walletBalance } = useApp();
+  const { walletBalance, isNewUser } = useApp();
+  const transactions = isNewUser ? [] : mockTransactions;
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [statementPeriod, setStatementPeriod] = useState('monthly');
   const [statementFormat, setStatementFormat] = useState('pdf');
+
+  if (isNewUser) {
+    return (
+      <div className="max-w-6xl space-y-6">
+        <h1 className="text-xl font-semibold text-text-primary">Transactions & statements</h1>
+        <div className="rounded-xl border border-border bg-white p-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-bg-alt">
+              <Wallet className="h-6 w-6 text-text-secondary" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-text-muted">Wallet balance</p>
+              <p className="text-2xl font-semibold text-text-primary">₹0</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-white p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-bg-alt mb-4">
+            <ArrowLeftRight className="h-7 w-7 text-text-muted" />
+          </div>
+          <h3 className="text-lg font-semibold text-text-primary">No transactions yet</h3>
+          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
+            Your investment activity, repayments, and wallet transactions will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {

@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AppProvider, useApp } from './context/AppContext';
 import Landing from './pages/Landing';
+import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
 import DashboardLayout from './layouts/DashboardLayout';
 import DashboardHome from './pages/DashboardHome';
@@ -12,24 +13,37 @@ import KYC from './pages/KYC';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useApp();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+        <Route index element={<DashboardHome />} />
+        <Route path="marketplace" element={<Marketplace />} />
+        <Route path="opportunity/:id" element={<OpportunityDetail />} />
+        <Route path="portfolio" element={<Portfolio />} />
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="kyc" element={<KYC />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="support" element={<Support />} />
+      </Route>
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="marketplace" element={<Marketplace />} />
-            <Route path="opportunity/:id" element={<OpportunityDetail />} />
-            <Route path="portfolio" element={<Portfolio />} />
-            <Route path="transactions" element={<Transactions />} />
-            <Route path="kyc" element={<KYC />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="support" element={<Support />} />
-          </Route>
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AppProvider>
   );

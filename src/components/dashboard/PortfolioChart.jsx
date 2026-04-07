@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
+import { LineChart as LineChartIcon } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { portfolioHistory } from '../../data/mockData';
+import { useApp } from '../../context/AppContext';
 
 const ranges = [
   { label: '1W', days: 7 },
@@ -26,8 +28,24 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function PortfolioChart() {
+  const { isNewUser } = useApp();
   const [range, setRange] = useState('1Y');
   const [showBenchmark, setShowBenchmark] = useState(false);
+
+  if (isNewUser) {
+    return (
+      <div className="rounded-xl border border-border bg-white p-5">
+        <h3 className="text-sm font-semibold text-text-primary mb-4">Portfolio performance</h3>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-bg-alt mb-3">
+            <LineChartIcon className="h-6 w-6 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">No performance data yet</p>
+          <p className="text-xs text-text-muted mt-1">Your portfolio chart will appear here once you start investing.</p>
+        </div>
+      </div>
+    );
+  }
 
   const data = useMemo(() => {
     const r = ranges.find((r) => r.label === range);

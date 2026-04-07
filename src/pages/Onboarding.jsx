@@ -10,9 +10,19 @@ import {
   DollarSign,
   Briefcase, Laptop, Building2, GraduationCap,
   LineChart, Landmark, Building, Bitcoin, Layers, Gem,
+  User,
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const questions = [
+  {
+    id: 'name',
+    title: 'What should we call you?',
+    subtitle: 'Enter your name so we can personalize your experience.',
+    layout: 'input',
+    placeholder: 'Your name',
+    icon: User,
+  },
   {
     id: 'experience',
     title: 'What is your investment experience level?',
@@ -227,6 +237,7 @@ function GridOption({ option, selected, onSelect }) {
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { registerNewUser } = useApp();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [direction, setDirection] = useState(1);
@@ -268,12 +279,34 @@ export default function Onboarding() {
     }
   };
 
-  const canProceed = currentQuestion && answers[currentQuestion.id];
+  const handleGoToDashboard = () => {
+    const { name, ...onboardingData } = answers;
+    registerNewUser(name || 'Investor', onboardingData);
+    navigate('/dashboard');
+  };
+
+  const canProceed = currentQuestion && answers[currentQuestion.id] && String(answers[currentQuestion.id]).trim();
 
   const renderOptions = () => {
     if (!currentQuestion) return null;
     const selected = answers[currentQuestion.id];
     const { layout, options } = currentQuestion;
+
+    if (layout === 'input') {
+      return (
+        <div className="max-w-sm mx-auto">
+          <input
+            type="text"
+            value={answers[currentQuestion.id] || ''}
+            onChange={(e) => setAnswers((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))}
+            placeholder={currentQuestion.placeholder}
+            className="w-full rounded-xl border border-border bg-white px-5 py-4 text-center text-lg font-medium text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+            autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter' && canProceed) goNext(); }}
+          />
+        </div>
+      );
+    }
 
     if (layout === 'cards') {
       return (
@@ -393,7 +426,7 @@ export default function Onboarding() {
                   ))}
                 </div>
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={handleGoToDashboard}
                   className="group inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
                 >
                   Go to Dashboard

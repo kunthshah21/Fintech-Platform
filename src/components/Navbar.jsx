@@ -31,6 +31,12 @@ export default function Navbar() {
             </a>
           ))}
           <button
+            onClick={() => navigate('/login')}
+            className="rounded-lg border border-border px-5 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-bg-alt"
+          >
+            Login
+          </button>
+          <button
             onClick={() => navigate('/onboarding')}
             className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
           >
@@ -61,8 +67,14 @@ export default function Navbar() {
               </a>
             ))}
             <button
+              onClick={() => { setMobileOpen(false); navigate('/login'); }}
+              className="mt-2 rounded-lg border border-border px-5 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-bg-alt"
+            >
+              Login
+            </button>
+            <button
               onClick={() => { setMobileOpen(false); navigate('/onboarding'); }}
-              className="mt-2 rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+              className="rounded-lg bg-accent px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90"
             >
               Get Started
             </button>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { IndianRupee, TrendingUp, PiggyBank, Percent, Download, LayoutGrid, List, Trash2, AlertTriangle } from 'lucide-react';
+import { IndianRupee, TrendingUp, PiggyBank, Percent, Download, LayoutGrid, List, Trash2, AlertTriangle, Briefcase, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import {
   activeInvestments, completedInvestments, monthlyReturns,
@@ -27,7 +27,7 @@ function PortfolioTooltip({ active, payload, label }) {
 }
 
 export default function Portfolio() {
-  const { watchlist, toggleWatchlist } = useApp();
+  const { watchlist, toggleWatchlist, isNewUser, portfolio } = useApp();
   const [activeTab, setActiveTab] = useState(0);
   const [viewMode, setViewMode] = useState('table');
 
@@ -37,6 +37,44 @@ export default function Portfolio() {
   const total = allocationData.reduce((s, d) => s + d.value, 0);
   const maxAlloc = Math.max(...allocationData.map((d) => d.value / total));
   const concentrationWarning = maxAlloc > 0.4;
+
+  if (isNewUser) {
+    return (
+      <div className="max-w-6xl space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { icon: IndianRupee, label: 'Total invested', value: '₹0' },
+            { icon: TrendingUp, label: 'Current value', value: '₹0' },
+            { icon: PiggyBank, label: 'Total returns', value: '₹0' },
+            { icon: Percent, label: 'XIRR', value: '0%' },
+          ].map(({ icon: Icon, label, value }) => (
+            <div key={label} className="rounded-xl border border-border bg-white p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-bg-alt"><Icon className="h-4 w-4 text-text-secondary" /></div>
+                <span className="text-xs font-medium text-text-muted">{label}</span>
+              </div>
+              <p className="text-xl font-semibold text-text-primary">{value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-border bg-white p-12 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-bg-alt mb-4">
+            <Briefcase className="h-7 w-7 text-text-muted" />
+          </div>
+          <h3 className="text-lg font-semibold text-text-primary">No investments yet</h3>
+          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
+            You haven&apos;t made any investments yet. Explore the marketplace to find opportunities that match your risk profile.
+          </p>
+          <Link
+            to="/dashboard/marketplace"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent/90 transition-colors"
+          >
+            Explore Marketplace <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl space-y-6">

@@ -3,6 +3,7 @@ import {
   TrendingUp, LayoutDashboard, Store, Briefcase, ArrowLeftRight,
   ShieldCheck, User, HelpCircle, LogOut,
 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
@@ -16,6 +17,7 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { logout } = useApp();
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0 border-r border-border bg-white z-30">
@@ -46,7 +48,7 @@ export default function Sidebar() {
 
       <div className="px-3 py-4 border-t border-border">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => { logout(); navigate('/'); }}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-alt hover:text-text-primary transition-colors w-full"
         >
           <LogOut className="h-[18px] w-[18px]" />

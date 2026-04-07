@@ -1,5 +1,7 @@
+import { PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { allocationData } from '../../data/mockData';
+import { useApp } from '../../context/AppContext';
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -13,7 +15,23 @@ function CustomTooltip({ active, payload }) {
 }
 
 export default function AllocationDonut() {
+  const { isNewUser } = useApp();
   const total = allocationData.reduce((s, d) => s + d.value, 0);
+
+  if (isNewUser) {
+    return (
+      <div className="rounded-xl border border-border bg-white p-5">
+        <h3 className="text-sm font-semibold text-text-primary mb-4">Asset allocation</h3>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-bg-alt mb-3">
+            <PieChartIcon className="h-6 w-6 text-text-muted" />
+          </div>
+          <p className="text-sm text-text-secondary">No allocation data yet</p>
+          <p className="text-xs text-text-muted mt-1">Your asset breakdown will show here after your first investment.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-border bg-white p-5">

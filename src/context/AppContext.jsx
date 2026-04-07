@@ -1,5 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { defaultUser, userPortfolio, notifications as defaultNotifications } from '../data/mockData';
+import {
+  defaultUser, userPortfolio, notifications as defaultNotifications,
+  registeredUsers, emptyPortfolio, opportunities,
+} from '../data/mockData';
 
 const AppContext = createContext(null);
 
@@ -27,8 +30,46 @@ const initialKyc = {
   submittedAt: null,
 };
 
+function getRecommendations(onboardingAnswers) {
+  if (!onboardingAnswers) return opportunities.slice(0, 3);
+
+  const { risk, goal, horizon } = onboardingAnswers;
+  const scored = opportunities.map((opp) => {
+    let score = 0;
+    if (risk === 'conservative') {
+      if (opp.riskRating === 'Low') score += 3;
+      if (opp.riskRating === 'Medium') score += 1;
+    } else if (risk === 'moderate') {
+      if (opp.riskRating === 'Medium') score += 3;
+      if (opp.riskRating === 'Low') score += 2;
+      if (opp.riskRating === 'High') score += 1;
+    } else if (risk === 'aggressive') {
+      if (opp.riskRating === 'High') score += 3;
+      if (opp.riskRating === 'Medium') score += 2;
+    }
+
+    if (goal === 'income' && opp.paymentFrequency === 'Monthly') score += 2;
+    if (goal === 'preserve' && opp.riskRating === 'Low') score += 2;
+    if (goal === 'wealth' && opp.returnRate >= 14) score += 2;
+
+    if (horizon === 'short' && opp.tenureMonths <= 6) score += 2;
+    else if (horizon === 'medium' && opp.tenureMonths <= 18) score += 1;
+    else if (horizon === 'long' && opp.tenureMonths >= 12) score += 1;
+
+    return { ...opp, _score: score };
+  });
+
+  scored.sort((a, b) => b._score - a._score);
+  return scored.slice(0, 3);
+}
+
 export function AppProvider({ children }) {
   const saved = loadState();
+
+  const [isAuthenticated, setIsAuthenticated] = useState(saved?.isAuthenticated || false);
+  const [isNewUser, setIsNewUser] = useState(saved?.isNewUser || false);
+  const [hasSeenTour, setHasSeenTour] = useState(saved?.hasSeenTour || false);
+  const [onboardingAnswers, setOnboardingAnswers] = useState(saved?.onboardingAnswers || null);
 
   const [user, setUser] = useState(saved?.user || defaultUser);
   const [kyc, setKyc] = useState(saved?.kyc || initialKyc);
@@ -39,8 +80,96 @@ export function AppProvider({ children }) {
   const [viewMode, setViewMode] = useState(saved?.viewMode || 'chat');
 
   useEffect(() => {
-    saveState({ user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode });
-  }, [user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode]);
+    saveState({
+      isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
+      user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode,
+    });
+  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, walletBalance, notifications, watchlist, viewMode]);
+
+  const login = useCallback((username, password) => {
+    const key = username.toLowerCase();
+    const record = registeredUsers[key];
+    if (!record || record.password !== password) return false;
+
+    setUser(record.user);
+    setPortfolio(record.portfolio);
+    setWalletBalance(record.portfolio.walletBalance);
+    setNotifications(defaultNotifications);
+    setKyc(saved?.kyc?.status === 'verified' ? saved.kyc : initialKyc);
+    setWatchlist(saved?.watchlist || []);
+    setIsAuthenticated(true);
+    setIsNewUser(false);
+    setHasSeenTour(true);
+    setOnboardingAnswers(null);
+    return true;
+  }, [saved]);
+
+  const loginWithDigiLocker = useCallback((name) => {
+    const newUser = {
+      name: name || 'DigiLocker User',
+      email: '',
+      mobile: '',
+      dob: '',
+      referralCode: `YIELD-${(name || 'DL').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`,
+      joinedDate: new Date().toISOString().split('T')[0],
+    };
+    setUser(newUser);
+    setPortfolio(emptyPortfolio);
+    setWalletBalance(0);
+    setKyc({ ...initialKyc, aadhaar: { method: 'digilocker', verified: true }, currentStep: 1, status: 'in_progress' });
+    setNotifications([
+      { id: 'n-welcome', type: 'info', title: 'Welcome to YieldVest!', message: `Hi ${newUser.name}, start by completing your KYC and exploring investment opportunities.`, time: 'Just now', read: false },
+    ]);
+    setWatchlist([]);
+    setIsAuthenticated(true);
+    setIsNewUser(true);
+    setHasSeenTour(false);
+    setOnboardingAnswers(null);
+  }, []);
+
+  const registerNewUser = useCallback((name, answers) => {
+    const newUser = {
+      name: name || 'Investor',
+      email: '',
+      mobile: '',
+      dob: '',
+      referralCode: `YIELD-${(name || 'NEW').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`,
+      joinedDate: new Date().toISOString().split('T')[0],
+    };
+    setUser(newUser);
+    setPortfolio(emptyPortfolio);
+    setWalletBalance(0);
+    setKyc(initialKyc);
+    setNotifications([
+      { id: 'n-welcome', type: 'info', title: 'Welcome to YieldVest!', message: `Hi ${newUser.name}, start by completing your KYC and exploring investment opportunities.`, time: 'Just now', read: false },
+    ]);
+    setWatchlist([]);
+    setOnboardingAnswers(answers);
+    setIsAuthenticated(true);
+    setIsNewUser(true);
+    setHasSeenTour(false);
+    setViewMode('standard');
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('yieldvest_onboarding');
+    setIsAuthenticated(false);
+    setIsNewUser(false);
+    setHasSeenTour(false);
+    setOnboardingAnswers(null);
+    setUser(defaultUser);
+    setKyc(initialKyc);
+    setPortfolio(userPortfolio);
+    setWalletBalance(userPortfolio.walletBalance);
+    setNotifications(defaultNotifications);
+    setWatchlist([]);
+    setViewMode('chat');
+  }, []);
+
+  const completeTour = useCallback(() => {
+    setHasSeenTour(true);
+  }, []);
 
   const updateKyc = useCallback((updates) => {
     setKyc((prev) => ({ ...prev, ...updates }));
@@ -87,8 +216,11 @@ export function AppProvider({ children }) {
 
   const isKycVerified = kyc.status === 'verified';
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const recommendations = getRecommendations(onboardingAnswers);
 
   const value = {
+    isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
+    login, loginWithDigiLocker, registerNewUser, logout, completeTour,
     user, setUser,
     kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified,
     portfolio, setPortfolio,
@@ -96,6 +228,7 @@ export function AppProvider({ children }) {
     notifications, markNotificationRead, markAllNotificationsRead, unreadCount,
     watchlist, toggleWatchlist,
     viewMode, setViewMode,
+    recommendations,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

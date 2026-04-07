@@ -11,15 +11,18 @@ import RepaymentWidget from '../components/dashboard/RepaymentWidget';
 import OpportunityCard from '../components/dashboard/OpportunityCard';
 import QuickActions from '../components/dashboard/QuickActions';
 import RoboChat from '../components/dashboard/RoboChat';
+import WelcomeTour from '../components/dashboard/WelcomeTour';
 
 export default function DashboardHome() {
-  const { portfolio, viewMode, setViewMode } = useApp();
+  const { portfolio, viewMode, setViewMode, isNewUser, hasSeenTour, recommendations } = useApp();
 
-  const featured = opportunities.slice(0, 3);
+  const featured = isNewUser ? recommendations : opportunities.slice(0, 3);
   const isChat = viewMode === 'chat';
 
   return (
     <div className="max-w-6xl">
+      {isNewUser && !hasSeenTour && <WelcomeTour />}
+
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           {isChat ? (
@@ -122,7 +125,9 @@ export default function DashboardHome() {
 
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-text-primary">Recommended for you</h3>
+                <h3 className="text-sm font-semibold text-text-primary">
+                  {isNewUser ? 'Best matches for your profile' : 'Recommended for you'}
+                </h3>
                 <Link to="/dashboard/marketplace" className="text-xs font-medium text-text-muted hover:text-text-secondary transition-colors flex items-center gap-1">
                   Explore all <ArrowRight className="h-3 w-3" />
                 </Link>

@@ -916,3 +916,21 @@ export const defaultUser = {
   referralCode: 'YIELD-KNT42',
   joinedDate: '2025-05-20',
 };
+
+export const emptyPortfolio = {
+  totalInvested: 0,
+  currentValue: 0,
+  totalReturns: 0,
+  returnPercent: 0,
+  activeInvestments: 0,
+  xirr: 0,
+  walletBalance: 0,
+};
+
+export const registeredUsers = {
+  kunth: {
+    password: '123456',
+    user: defaultUser,
+    portfolio: userPortfolio,
+  },
+};
