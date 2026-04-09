@@ -30,31 +30,76 @@ const initialKyc = {
   submittedAt: null,
 };
 
+const QUADRANT_PRODUCTS = {
+  'cautious-wealthy': ['Invoice Discounting', 'Structured Debt'],
+  'aggressive': ['Private Credit', 'Revenue-Based Financing', 'P2P Lending'],
+  'anxious-explorer': ['P2P Lending', 'Invoice Discounting'],
+  'aspirational': ['P2P Lending', 'Revenue-Based Financing'],
+};
+
+function computeInvestorProfile(answers) {
+  if (!answers) return null;
+  const toleranceScore = (answers.emotionalRisk || 1) + (answers.defaultTolerance || 1);
+  const capacityScore = (answers.riskCapacity || 1) + (answers.stability || 1);
+  const highTolerance = toleranceScore >= 4;
+  const highCapacity = capacityScore >= 4;
+
+  let quadrant;
+  if (highCapacity && !highTolerance) quadrant = 'cautious-wealthy';
+  else if (highCapacity && highTolerance) quadrant = 'aggressive';
+  else if (!highCapacity && highTolerance) quadrant = 'aspirational';
+  else quadrant = 'anxious-explorer';
+
+  return {
+    quadrant,
+    toleranceScore,
+    capacityScore,
+    sophisticationLevel: answers.sophistication || 1,
+    horizonLevel: answers.horizon || 1,
+    goal: answers.goal || 'fd-beater',
+  };
+}
+
 function getRecommendations(onboardingAnswers) {
   if (!onboardingAnswers) return opportunities.slice(0, 3);
 
-  const { risk, goal, horizon } = onboardingAnswers;
-  const scored = opportunities.map((opp) => {
+  const profile = computeInvestorProfile(onboardingAnswers);
+  if (!profile) return opportunities.slice(0, 3);
+
+  const preferredTypes = QUADRANT_PRODUCTS[profile.quadrant] || [];
+
+  const filtered = opportunities.filter((opp) => {
+    if (profile.horizonLevel === 1 && opp.productType !== 'Invoice Discounting') return false;
+    if (profile.sophisticationLevel <= 2) {
+      if (opp.productType === 'Private Credit' || opp.productType === 'Structured Debt') return false;
+    }
+    return true;
+  });
+
+  const scored = filtered.map((opp) => {
     let score = 0;
-    if (risk === 'conservative') {
+
+    if (preferredTypes.includes(opp.productType)) score += 5;
+
+    if (profile.quadrant === 'cautious-wealthy') {
       if (opp.riskRating === 'Low') score += 3;
       if (opp.riskRating === 'Medium') score += 1;
-    } else if (risk === 'moderate') {
-      if (opp.riskRating === 'Medium') score += 3;
-      if (opp.riskRating === 'Low') score += 2;
-      if (opp.riskRating === 'High') score += 1;
-    } else if (risk === 'aggressive') {
-      if (opp.riskRating === 'High') score += 3;
+    } else if (profile.quadrant === 'aggressive') {
+      if (opp.riskRating === 'High') score += 2;
       if (opp.riskRating === 'Medium') score += 2;
+      if (opp.returnRate >= 15) score += 2;
+    } else if (profile.quadrant === 'anxious-explorer') {
+      if (opp.riskRating === 'Low') score += 3;
+      if (opp.minInvestment <= 25000) score += 2;
+    } else if (profile.quadrant === 'aspirational') {
+      if (opp.minInvestment <= 25000) score += 2;
+      if (opp.returnRate >= 14) score += 2;
     }
 
-    if (goal === 'income' && opp.paymentFrequency === 'Monthly') score += 2;
-    if (goal === 'preserve' && opp.riskRating === 'Low') score += 2;
-    if (goal === 'wealth' && opp.returnRate >= 14) score += 2;
-
-    if (horizon === 'short' && opp.tenureMonths <= 6) score += 2;
-    else if (horizon === 'medium' && opp.tenureMonths <= 18) score += 1;
-    else if (horizon === 'long' && opp.tenureMonths >= 12) score += 1;
+    if (profile.goal === 'fd-beater' && opp.riskRating === 'Low') score += 2;
+    if (profile.goal === 'cashflow' && opp.paymentFrequency === 'Monthly') score += 2;
+    if (profile.goal === 'diversify-equity') score += 1;
+    if (profile.goal === 'max-yield' && opp.returnRate >= 15) score += 2;
 
     return { ...opp, _score: score };
   });
@@ -311,10 +356,11 @@ export function AppProvider({ children }) {
 
   const isKycVerified = kyc.status === 'verified';
   const unreadCount = notifications.filter((n) => !n.read).length;
+  const investorProfile = computeInvestorProfile(onboardingAnswers);
   const recommendations = getRecommendations(onboardingAnswers);
 
   const value = {
-    isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
+    isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, investorProfile,
     login, loginWithDigiLocker, registerNewUser, logout, completeTour,
     tourStep, setTourStep, advanceTour,
     user, setUser,

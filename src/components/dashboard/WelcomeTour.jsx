@@ -7,23 +7,32 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
-const riskLabels = {
-  conservative: 'Conservative',
-  moderate: 'Balanced',
-  aggressive: 'Growth-focused',
+const quadrantLabels = {
+  'cautious-wealthy': 'Cautious Wealthy',
+  aggressive: 'Aggressive Investor',
+  'anxious-explorer': 'Anxious Explorer',
+  aspirational: 'Aspirational Risk-Taker',
 };
 
-const riskColors = {
-  conservative: 'bg-green-soft text-green',
-  moderate: 'bg-amber-soft text-amber',
-  aggressive: 'bg-red-soft text-red',
+const quadrantColors = {
+  'cautious-wealthy': 'bg-blue-50 text-blue-600',
+  aggressive: 'bg-green-soft text-green',
+  'anxious-explorer': 'bg-amber-soft text-amber',
+  aspirational: 'bg-purple-50 text-purple-600',
 };
 
-function buildWhyText(answers, topRec) {
-  if (!answers || !topRec) return '';
-  const riskMap = { conservative: 'low', moderate: 'moderate', aggressive: 'high' };
-  const goalMap = { income: 'generate regular income', wealth: 'build long-term wealth', preserve: 'preserve capital safely' };
-  return `Based on your ${riskMap[answers.risk] || 'moderate'} risk appetite and goal to ${goalMap[answers.goal] || 'grow your wealth'}, we recommend ${topRec.productType} with ${topRec.issuer}. This ${topRec.riskRating?.toLowerCase()}-risk product offers ${topRec.returnRate}% annual returns over ${topRec.tenure}, ideal for your ${answers.horizon === 'short' ? 'short' : answers.horizon === 'long' ? 'long' : 'short-to-medium'} time horizon.`;
+const goalCopy = {
+  'fd-beater': 'earn more than FDs with minimal stress',
+  cashflow: 'generate regular passive income',
+  'diversify-equity': 'diversify away from equity volatility',
+  'max-yield': 'chase the highest possible yield',
+};
+
+function buildWhyText(profile, topRec) {
+  if (!profile || !topRec) return '';
+  const label = quadrantLabels[profile.quadrant] || 'Balanced';
+  const goalText = goalCopy[profile.goal] || 'grow your wealth';
+  return `As a ${label} investor looking to ${goalText}, we recommend ${topRec.productType} with ${topRec.issuer}. This ${topRec.riskRating?.toLowerCase()}-risk product offers ${topRec.returnRate}% annual returns over ${topRec.tenure}.`;
 }
 
 const TOUR_STEPS = [
@@ -77,9 +86,9 @@ function useTargetRect(target, tourStep) {
   return rect;
 }
 
-function WelcomeModal({ user, answers, topRec, onStart, onSkip }) {
-  const riskProfile = answers?.risk || 'moderate';
-  const whyText = buildWhyText(answers, topRec);
+function WelcomeModal({ user, profile, topRec, onStart, onSkip }) {
+  const quadrant = profile?.quadrant || 'anxious-explorer';
+  const whyText = buildWhyText(profile, topRec);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -110,12 +119,12 @@ function WelcomeModal({ user, answers, topRec, onStart, onSkip }) {
           </p>
         </div>
 
-        {topRec && answers && (
+        {topRec && profile && (
           <div className="rounded-xl border border-border bg-bg-alt p-5 mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${riskColors[riskProfile] || riskColors.moderate}`}>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold ${quadrantColors[quadrant] || quadrantColors['anxious-explorer']}`}>
                 <Shield className="h-3 w-3" />
-                {riskLabels[riskProfile] || 'Balanced'} Profile
+                {quadrantLabels[quadrant] || 'Explorer'}
               </span>
               <span className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">Top Pick</span>
             </div>
@@ -341,7 +350,7 @@ function FinishModal({ onKyc, onMarketplace, onComplete }) {
 
 export default function WelcomeTour() {
   const {
-    user, onboardingAnswers, recommendations, tourStep, setTourStep,
+    user, investorProfile, recommendations, tourStep, setTourStep,
     advanceTour, completeTour, isNewUser, hasSeenTour,
   } = useApp();
   const navigate = useNavigate();
@@ -373,7 +382,7 @@ export default function WelcomeTour() {
     return (
       <WelcomeModal
         user={user}
-        answers={onboardingAnswers}
+        profile={investorProfile}
         topRec={recommendations?.[0]}
         onStart={handleNext}
         onSkip={handleSkip}
