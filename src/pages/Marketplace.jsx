@@ -105,10 +105,12 @@ export default function Marketplace() {
         <p className="mt-1 text-sm text-text-secondary">{filtered.length} opportunities available</p>
       </div>
 
-      <div className="flex gap-6">
-        <FilterSidebar filters={filters} onChange={setFilters} onReset={() => setFilters(defaultFilters)} />
+      <div className="flex flex-wrap lg:flex-nowrap gap-4 lg:gap-6">
+        <div className="w-full lg:w-auto">
+          <FilterSidebar filters={filters} onChange={setFilters} onReset={() => setFilters(defaultFilters)} />
+        </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full">
           <div data-tour="marketplace-search" className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />

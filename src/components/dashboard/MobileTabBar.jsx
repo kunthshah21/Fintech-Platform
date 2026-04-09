@@ -1,13 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Store, Briefcase, ArrowLeftRight, User } from 'lucide-react';
+import { LayoutDashboard, Store, Briefcase, ArrowLeftRight, ShieldCheck, User } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
-const tabs = [
+const BASE_TABS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
   { to: '/dashboard/marketplace', icon: Store, label: 'Explore' },
   { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
   { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Txns' },
-  { to: '/dashboard/profile', icon: User, label: 'Profile' },
 ];
 
 const NAV_STEP_MAP = {
@@ -17,9 +16,14 @@ const NAV_STEP_MAP = {
 };
 
 export default function MobileTabBar() {
-  const { tourStep, advanceTour } = useApp();
+  const { tourStep, advanceTour, isKycVerified } = useApp();
   const tourNavTarget = NAV_STEP_MAP[tourStep] || null;
   const isTourActive = tourStep !== null;
+  const tabs = [
+    ...BASE_TABS,
+    ...(!isKycVerified ? [{ to: '/dashboard/kyc', icon: ShieldCheck, label: 'KYC' }] : []),
+    { to: '/dashboard/profile', icon: User, label: 'Profile' },
+  ];
 
   return (
     <nav className={`lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border safe-area-pb transition-[z-index] ${tourNavTarget ? 'z-[55]' : 'z-30'}`}>

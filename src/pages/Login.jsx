@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Loader2, Fingerprint, ArrowRight, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -16,8 +16,7 @@ export default function Login() {
   const [digiLoading, setDigiLoading] = useState(false);
 
   if (isAuthenticated) {
-    navigate('/dashboard', { replace: true });
-    return null;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleCredentialLogin = (e) => {

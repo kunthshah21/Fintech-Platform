@@ -85,7 +85,7 @@ export default function FilterSidebar({ filters, onChange, onReset }) {
       {/* Mobile trigger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-text-primary hover:bg-bg-alt transition-colors"
+        className="lg:hidden inline-flex self-start w-fit h-fit items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-text-primary hover:bg-bg-alt transition-colors"
       >
         <SlidersHorizontal className="h-4 w-4" />
         Filters {activeCount > 0 && <span className="bg-accent text-white text-[10px] rounded-full px-1.5 py-0.5">{activeCount}</span>}
