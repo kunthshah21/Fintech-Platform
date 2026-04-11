@@ -104,135 +104,37 @@ export function AppProvider({ children }) {
   const [hasSeenTour, setHasSeenTour] = useState(false);
   const [onboardingAnswers, setOnboardingAnswers] = useState(null);
 
-  const [user, setUser] = useState({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
-  const [kyc, setKyc] = useState(initialKyc);
-  const [portfolio, setPortfolio] = useState(emptyPortfolio);
-  const [userInvestments, setUserInvestments] = useState([]);
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [notifications, setNotifications] = useState([]);
-  const [watchlist, setWatchlist] = useState([]);
-  const [viewMode, setViewMode] = useState('chat');
+  const [user, setUser] = useState(saved?.user || defaultUser);
+  const [kyc, setKyc] = useState(saved?.kyc || initialKyc);
+  const [portfolio, setPortfolio] = useState(saved?.portfolio || userPortfolio);
+  const [userInvestments, setUserInvestments] = useState(
+    saved?.userInvestments || (saved?.isNewUser ? [] : activeInvestments)
+  );
+  const [walletBalance, setWalletBalance] = useState(saved?.walletBalance ?? userPortfolio.walletBalance);
+  const [notifications, setNotifications] = useState(saved?.notifications || defaultNotifications);
+  const [watchlist, setWatchlist] = useState(saved?.watchlist || []);
+  const [viewMode, setViewMode] = useState(saved?.viewMode || 'chat');
 
-  const [tourStep, setTourStep] = useState(null);
-
-  const skipAuthEffect = useRef(false);
-
-  // ── Load user data from Supabase after auth ──
-  const loadUserData = useCallback(async (userId) => {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (profile) {
-      setUser({
-        name: profile.name || '',
-        email: profile.email || '',
-        mobile: profile.mobile || '',
-        dob: profile.dob || '',
-        referralCode: profile.referral_code || '',
-        joinedDate: profile.joined_date || '',
-      });
-
-      setPortfolio({
-        totalInvested: Number(profile.total_invested) || 0,
-        currentValue: Number(profile.current_value) || 0,
-        totalReturns: Number(profile.total_returns) || 0,
-        returnPercent: Number(profile.return_percent) || 0,
-        activeInvestments: profile.active_investments_count || 0,
-        xirr: Number(profile.xirr) || 0,
-        walletBalance: Number(profile.wallet_balance) || 0,
-      });
-      setWalletBalance(Number(profile.wallet_balance) || 0);
-
-      setKyc((prev) => ({
-        ...prev,
-        status: profile.kyc_status || 'not_started',
-        pan: { ...prev.pan, number: profile.pan_number || '', verified: !!profile.pan_number },
-        aadhaar: { ...prev.aadhaar, verified: profile.aadhaar_verified || false },
-        bank: { ...prev.bank, verified: profile.bank_verified || false },
-        currentStep: profile.kyc_status === 'verified' ? 4 : prev.currentStep,
-      }));
-
-      setOnboardingAnswers(profile.onboarding_answers || null);
-      setIsNewUser(!profile.onboarding_completed);
-      setHasSeenTour(profile.onboarding_completed || false);
-    }
-
-    const { data: investments } = await supabase
-      .from('investments')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (investments) {
-      setUserInvestments(investments.map((inv) => ({
-        id: inv.id,
-        opportunityId: inv.opportunity_id,
-        name: inv.name,
-        productType: inv.product_type,
-        amountInvested: Number(inv.amount_invested),
-        currentValue: Number(inv.current_value),
-        returnsEarned: Number(inv.returns_earned),
-        returnPercent: Number(inv.return_percent),
-        startDate: inv.start_date,
-        maturityDate: inv.maturity_date,
-        nextRepayment: inv.next_repayment,
-        status: inv.status,
-      })));
-    }
-
-    const { data: watchlistData } = await supabase
-      .from('watchlist')
-      .select('opportunity_id')
-      .eq('user_id', userId);
-
-    if (watchlistData) {
-      setWatchlist(watchlistData.map((w) => w.opportunity_id));
-    }
-
-    setNotifications(defaultNotifications);
-  }, []);
-
-  // ── Supabase Auth listener ──
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s?.user) {
-        setIsAuthenticated(true);
-        loadUserData(s.user.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
+    saveState({
+      isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
+      user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode,
     });
+  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode]);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      if (skipAuthEffect.current) {
-        skipAuthEffect.current = false;
-        return;
-      }
-      setSession(s);
-      if (s?.user) {
-        setIsAuthenticated(true);
-        loadUserData(s.user.id);
-      } else {
-        setIsAuthenticated(false);
-        resetState();
-      }
-    });
+  const login = useCallback((username, password) => {
+    const key = username.toLowerCase();
+    const record = registeredUsers[key];
+    if (!record || record.password !== password) return false;
 
-    return () => subscription.unsubscribe();
-  }, [loadUserData]);
-
-  function resetState() {
-    setUser({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
-    setKyc(initialKyc);
-    setPortfolio(emptyPortfolio);
-    setUserInvestments([]);
-    setWalletBalance(0);
-    setNotifications([]);
-    setWatchlist([]);
+    setUser(record.user);
+    setPortfolio(record.portfolio);
+    setUserInvestments(activeInvestments);
+    setWalletBalance(record.portfolio.walletBalance);
+    setNotifications(defaultNotifications);
+    setKyc(saved?.kyc?.status === 'verified' ? saved.kyc : initialKyc);
+    setWatchlist(saved?.watchlist || []);
+    setIsAuthenticated(true);
     setIsNewUser(false);
     setHasSeenTour(false);
     setOnboardingAnswers(null);
@@ -279,6 +181,7 @@ export function AppProvider({ children }) {
     setUser(newUser);
     setPortfolio(emptyPortfolio);
     setUserInvestments([]);
+    setUserTransactions([]);
     setWalletBalance(0);
     setKyc(initialKyc);
     setNotifications([
@@ -355,6 +258,7 @@ export function AppProvider({ children }) {
     setUser(newUser);
     setPortfolio(emptyPortfolio);
     setUserInvestments([]);
+    setUserTransactions([]);
     setWalletBalance(0);
     setKyc({ ...initialKyc, aadhaar: { method: 'digilocker', verified: true }, currentStep: 1, status: 'in_progress' });
     setNotifications([
@@ -374,6 +278,18 @@ export function AppProvider({ children }) {
     await supabase.auth.signOut();
     resetState();
     setIsAuthenticated(false);
+    setIsNewUser(false);
+    setHasSeenTour(false);
+    setTourStep(null);
+    setOnboardingAnswers(null);
+    setUser(defaultUser);
+    setKyc(initialKyc);
+    setPortfolio(userPortfolio);
+    setUserInvestments(activeInvestments);
+    setWalletBalance(userPortfolio.walletBalance);
+    setNotifications(defaultNotifications);
+    setWatchlist([]);
+    setViewMode('chat');
   }, []);
 
   // ── Tour ──
@@ -514,7 +430,19 @@ export function AppProvider({ children }) {
       status: 'on_track',
     };
 
+    const today = now.toISOString().split('T')[0];
+    const transaction = {
+      id: `TXN${Date.now()}`,
+      date: today,
+      description: `Investment - ${opportunity.issuer} ${opportunity.productType}`,
+      type: 'investment',
+      amount: -amount,
+      status: 'completed',
+      reference: `INV-${opportunity.id.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+    };
+
     setUserInvestments((prev) => [investment, ...prev]);
+    setUserTransactions((prev) => [transaction, ...prev]);
     setPortfolio((prev) => {
       const totalInvested = prev.totalInvested + amount;
       const currentValue = prev.currentValue + amount + expectedReturns;
@@ -625,6 +553,7 @@ export function AppProvider({ children }) {
     kyc, updateKyc, completeKycStep, verifyKyc, persistKycStatus, isKycVerified,
     portfolio, setPortfolio,
     userInvestments, createInvestment,
+    userTransactions,
     walletBalance, setWalletBalance,
     notifications, markNotificationRead, markAllNotificationsRead, unreadCount,
     watchlist, toggleWatchlist,

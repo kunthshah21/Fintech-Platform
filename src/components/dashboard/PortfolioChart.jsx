@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { LineChart as LineChartIcon } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { portfolioHistory } from '../../data/mockData';
 import { useApp } from '../../context/AppContext';
 
 const ranges = [
@@ -12,6 +11,76 @@ const ranges = [
   { label: '1Y', days: 365 },
   { label: 'All', days: Infinity },
 ];
+
+function toDateKey(input) {
+  return new Date(input).toISOString().split('T')[0];
+}
+
+function buildLiveHistory({ portfolio, userInvestments, userTransactions }) {
+  const todayKey = toDateKey(new Date());
+  const investmentTransactions = (userTransactions || [])
+    .filter((t) => t.type === 'investment' && t.status === 'completed')
+    .map((t) => ({ date: toDateKey(t.date), amount: Math.abs(Number(t.amount) || 0) }));
+
+  const repaymentsByDate = (userTransactions || [])
+    .filter((t) => t.type === 'repayment' && t.status === 'completed' && (Number(t.amount) || 0) > 0)
+    .reduce((acc, t) => {
+      const key = toDateKey(t.date);
+      acc[key] = (acc[key] || 0) + Number(t.amount);
+      return acc;
+    }, {});
+
+  if (investmentTransactions.length === 0 && (!userInvestments || userInvestments.length === 0)) {
+    return [{ date: todayKey, value: portfolio.currentValue || 0, fd: portfolio.currentValue || 0 }];
+  }
+
+  const inferredInvestments = (userInvestments || []).map((inv) => ({
+    date: toDateKey(inv.startDate),
+    amount: Number(inv.amountInvested) || 0,
+  }));
+
+  const mergedInvestments = [...investmentTransactions, ...inferredInvestments].sort((a, b) => a.date.localeCompare(b.date));
+  const firstDate = mergedInvestments[0]?.date || todayKey;
+
+  const investedByDate = mergedInvestments.reduce((acc, item) => {
+    acc[item.date] = (acc[item.date] || 0) + item.amount;
+    return acc;
+  }, {});
+
+  const start = new Date(firstDate);
+  const end = new Date(todayKey);
+  const totalDays = Math.max(1, Math.round((end - start) / 86400000));
+  const totalInvested = Math.max(0, Number(portfolio.totalInvested) || 0);
+  const totalReturns = Number(portfolio.totalReturns) || 0;
+  const totalRepayments = Object.values(repaymentsByDate).reduce((sum, amount) => sum + amount, 0);
+
+  let runningInvested = 0;
+  let runningRepayments = 0;
+  const history = [];
+
+  for (let i = 0; i <= totalDays; i += 1) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const key = toDateKey(d);
+
+    runningInvested += investedByDate[key] || 0;
+    runningRepayments += repaymentsByDate[key] || 0;
+
+    const timeProgress = i / totalDays;
+    const investedProgress = totalInvested > 0 ? Math.min(1, runningInvested / totalInvested) : 1;
+    const repaymentProgress = totalRepayments > 0 ? Math.min(1, runningRepayments / totalRepayments) : 0;
+    const returnProgress = Math.min(1, (0.65 * investedProgress) + (0.25 * timeProgress) + (0.1 * repaymentProgress));
+
+    const value = Math.round(runningInvested + (totalReturns * returnProgress));
+    history.push({
+      date: key,
+      value: i === totalDays ? Math.round(portfolio.currentValue || value) : value,
+      fd: Math.round(runningInvested + (runningInvested * 0.07 * timeProgress)),
+    });
+  }
+
+  return history;
+}
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
@@ -28,9 +97,14 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function PortfolioChart() {
-  const { isNewUser } = useApp();
+  const { isNewUser, portfolio, userInvestments, userTransactions } = useApp();
   const [range, setRange] = useState('1Y');
   const [showBenchmark, setShowBenchmark] = useState(false);
+
+  const liveHistory = useMemo(
+    () => buildLiveHistory({ portfolio, userInvestments, userTransactions }),
+    [portfolio, userInvestments, userTransactions]
+  );
 
   if (isNewUser) {
     return (
@@ -49,12 +123,12 @@ export default function PortfolioChart() {
 
   const data = useMemo(() => {
     const r = ranges.find((r) => r.label === range);
-    const sliced = r.days === Infinity ? portfolioHistory : portfolioHistory.slice(-r.days);
+    const sliced = r.days === Infinity ? liveHistory : liveHistory.slice(-r.days);
     return sliced.filter((_, i) => {
       if (sliced.length <= 60) return true;
       return i % Math.ceil(sliced.length / 60) === 0 || i === sliced.length - 1;
     });
-  }, [range]);
+  }, [range, liveHistory]);
 
   const pnl = data.length >= 2 ? data[data.length - 1].value - data[0].value : 0;
   const pnlPercent = data.length >= 2 ? ((pnl / data[0].value) * 100).toFixed(1) : 0;
