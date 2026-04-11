@@ -245,6 +245,12 @@ export default function Login() {
             </>
           )}
         </div>
+
+        <div className="mt-4 pt-4 border-t border-border-light text-center">
+          <Link to="/staff/login" className="text-[11px] text-text-muted hover:text-text-secondary transition-colors">
+            Staff login &rarr;
+          </Link>
+        </div>
       </motion.div>
     </div>
   );

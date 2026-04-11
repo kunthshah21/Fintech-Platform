@@ -617,6 +617,7 @@ export function AppProvider({ children }) {
     const { data: posts, error } = await supabase
       .from('community_posts')
       .select('*, profiles:user_id(name)')
+      .eq('hidden', false)
       .order('created_at', { ascending: false });
 
     if (error || !posts) return [];
