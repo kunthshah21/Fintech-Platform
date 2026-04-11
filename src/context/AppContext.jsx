@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   defaultUser, userPortfolio, notifications as defaultNotifications,
-  registeredUsers, emptyPortfolio, opportunities, activeInvestments,
+  registeredUsers, emptyPortfolio, opportunities, activeInvestments, transactions as defaultTransactions,
 } from '../data/mockData';
 
 const AppContext = createContext(null);
@@ -122,6 +122,9 @@ export function AppProvider({ children }) {
   const [userInvestments, setUserInvestments] = useState(
     saved?.userInvestments || (saved?.isNewUser ? [] : activeInvestments)
   );
+  const [userTransactions, setUserTransactions] = useState(
+    saved?.userTransactions || (saved?.isNewUser ? [] : defaultTransactions)
+  );
   const [walletBalance, setWalletBalance] = useState(saved?.walletBalance ?? userPortfolio.walletBalance);
   const [notifications, setNotifications] = useState(saved?.notifications || defaultNotifications);
   const [watchlist, setWatchlist] = useState(saved?.watchlist || []);
@@ -130,9 +133,9 @@ export function AppProvider({ children }) {
   useEffect(() => {
     saveState({
       isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
-      user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode,
+      user, kyc, portfolio, userInvestments, userTransactions, walletBalance, notifications, watchlist, viewMode,
     });
-  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode]);
+  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, userInvestments, userTransactions, walletBalance, notifications, watchlist, viewMode]);
 
   const login = useCallback((username, password) => {
     const key = username.toLowerCase();
@@ -142,6 +145,7 @@ export function AppProvider({ children }) {
     setUser(record.user);
     setPortfolio(record.portfolio);
     setUserInvestments(activeInvestments);
+    setUserTransactions(defaultTransactions);
     setWalletBalance(record.portfolio.walletBalance);
     setNotifications(defaultNotifications);
     setKyc(saved?.kyc?.status === 'verified' ? saved.kyc : initialKyc);
@@ -165,6 +169,7 @@ export function AppProvider({ children }) {
     setUser(newUser);
     setPortfolio(emptyPortfolio);
     setUserInvestments([]);
+    setUserTransactions([]);
     setWalletBalance(0);
     setKyc({ ...initialKyc, aadhaar: { method: 'digilocker', verified: true }, currentStep: 1, status: 'in_progress' });
     setNotifications([
@@ -190,6 +195,7 @@ export function AppProvider({ children }) {
     setUser(newUser);
     setPortfolio(emptyPortfolio);
     setUserInvestments([]);
+    setUserTransactions([]);
     setWalletBalance(0);
     setKyc(initialKyc);
     setNotifications([
@@ -216,6 +222,7 @@ export function AppProvider({ children }) {
     setKyc(initialKyc);
     setPortfolio(userPortfolio);
     setUserInvestments(activeInvestments);
+    setUserTransactions(defaultTransactions);
     setWalletBalance(userPortfolio.walletBalance);
     setNotifications(defaultNotifications);
     setWatchlist([]);
@@ -315,7 +322,19 @@ export function AppProvider({ children }) {
       status: 'on_track',
     };
 
+    const today = now.toISOString().split('T')[0];
+    const transaction = {
+      id: `TXN${Date.now()}`,
+      date: today,
+      description: `Investment - ${opportunity.issuer} ${opportunity.productType}`,
+      type: 'investment',
+      amount: -amount,
+      status: 'completed',
+      reference: `INV-${opportunity.id.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+    };
+
     setUserInvestments((prev) => [investment, ...prev]);
+    setUserTransactions((prev) => [transaction, ...prev]);
     setPortfolio((prev) => {
       const totalInvested = prev.totalInvested + amount;
       const currentValue = prev.currentValue + amount + expectedReturns;
@@ -367,6 +386,7 @@ export function AppProvider({ children }) {
     kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified,
     portfolio, setPortfolio,
     userInvestments, createInvestment,
+    userTransactions,
     walletBalance, setWalletBalance,
     notifications, markNotificationRead, markAllNotificationsRead, unreadCount,
     watchlist, toggleWatchlist,

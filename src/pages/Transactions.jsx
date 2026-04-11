@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Wallet, Plus, ArrowDownToLine, Download, FileText, ArrowLeftRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { transactions as mockTransactions } from '../data/mockData';
 
 const typeLabels = {
   investment: { label: 'Investment', classes: 'bg-accent-soft text-accent' },
@@ -18,8 +17,8 @@ const statusStyles = {
 };
 
 export default function Transactions() {
-  const { walletBalance, isNewUser } = useApp();
-  const transactions = isNewUser ? [] : mockTransactions;
+  const { walletBalance, isNewUser, userTransactions } = useApp();
+  const transactions = userTransactions || [];
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
