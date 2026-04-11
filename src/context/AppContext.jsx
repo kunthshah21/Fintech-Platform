@@ -677,19 +677,22 @@ export function AppProvider({ children }) {
 
   const togglePostLike = useCallback(async (postId, currentlyLiked) => {
     const userId = session?.user?.id;
-    if (!userId) return;
+    if (!userId) return { success: false };
 
+    let error;
     if (currentlyLiked) {
-      await supabase
+      ({ error } = await supabase
         .from('community_likes')
         .delete()
         .eq('post_id', postId)
-        .eq('user_id', userId);
+        .eq('user_id', userId));
     } else {
-      await supabase
+      ({ error } = await supabase
         .from('community_likes')
-        .insert({ post_id: postId, user_id: userId });
+        .insert({ post_id: postId, user_id: userId }));
     }
+
+    return { success: !error };
   }, [session]);
 
   const fetchPostComments = useCallback(async (postId) => {

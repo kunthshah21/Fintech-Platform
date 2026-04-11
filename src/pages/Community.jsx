@@ -90,12 +90,13 @@ function SharedDataCard({ postType, data }) {
   return null;
 }
 
-function CommentSection({ postId }) {
+function CommentSection({ postId, onCommentAdded }) {
   const { fetchPostComments, createPostComment, session } = useApp();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,10 +109,14 @@ function CommentSection({ postId }) {
   const handleSubmit = async () => {
     if (!text.trim() || submitting) return;
     setSubmitting(true);
+    setError(null);
     const comment = await createPostComment(postId, text);
     if (comment) {
       setComments((prev) => [...prev, comment]);
       setText('');
+      onCommentAdded?.();
+    } else {
+      setError('Failed to post comment. Please try again.');
     }
     setSubmitting(false);
   };
@@ -144,12 +149,16 @@ function CommentSection({ postId }) {
         </>
       )}
 
+      {error && (
+        <p className="text-xs text-red-500 text-center">{error}</p>
+      )}
+
       {session && (
         <div className="flex gap-2">
           <input
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); setError(null); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             placeholder="Write a comment..."
             className="flex-1 rounded-lg border border-border bg-bg-alt px-3 py-2 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20"
@@ -173,11 +182,17 @@ function PostCard({ post, onLike, onDelete, currentUserId }) {
   const [likesCount, setLikesCount] = useState(post.likesCount);
   const [commentsCount, setCommentsCount] = useState(post.commentsCount);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    const prevLiked = liked;
     const newLiked = !liked;
     setLiked(newLiked);
     setLikesCount((c) => c + (newLiked ? 1 : -1));
-    onLike(post.id, liked);
+
+    const result = await onLike(post.id, prevLiked);
+    if (!result?.success) {
+      setLiked(prevLiked);
+      setLikesCount((c) => c + (prevLiked ? 1 : -1));
+    }
   };
 
   return (
@@ -226,7 +241,12 @@ function PostCard({ post, onLike, onDelete, currentUserId }) {
         </button>
       </div>
 
-      {showComments && <CommentSection postId={post.id} />}
+      {showComments && (
+        <CommentSection
+          postId={post.id}
+          onCommentAdded={() => setCommentsCount((c) => c + 1)}
+        />
+      )}
     </div>
   );
 }
@@ -341,7 +361,7 @@ export default function Community() {
   };
 
   const handleLike = async (postId, currentlyLiked) => {
-    await togglePostLike(postId, currentlyLiked);
+    return await togglePostLike(postId, currentlyLiked);
   };
 
   const handleDelete = async (postId) => {
