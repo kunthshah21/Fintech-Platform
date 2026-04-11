@@ -22,20 +22,22 @@ The overall experience should feel like a **premium fintech platform** — trust
 
 ### Core Colors
 
-| Role | Tailwind Token | Value | Usage |
-|------|----------------|-------|-------|
-| **Background (Primary)** | `bg` | `#FFFFFF` | Page background, white sections |
-| **Background (Alternate)** | `bg-alt` | `#F9FAFB` | Alternating sections, input fields, icon containers |
-| **Background (Elevated)** | `bg-elevated` | `#FFFFFF` | Cards, modals, elevated surfaces |
-| **Border** | `border` | `#E5E7EB` | Card borders, dividers, input outlines |
-| **Border (Light)** | `border-light` | `#F3F4F6` | Very subtle separators |
-| **Text (Primary)** | `text-primary` | `#111827` | Headlines, card titles, primary content |
-| **Text (Secondary)** | `text-secondary` | `#6B7280` | Body copy, descriptions, nav links |
-| **Text (Muted)** | `text-muted` | `#9CA3AF` | Captions, metadata, section labels, placeholders |
-| **Accent** | `accent` | `#18181B` | Primary CTA buttons, inverted CTA blocks |
-| **Accent (Soft)** | `accent-soft` | `#F4F4F5` | Hover states on light backgrounds |
-| **Green** | `green` | `#059669` | Positive indicators (return rates, online status, logo icon) |
-| **Green (Soft)** | `green-soft` | `#ECFDF5` | Return rate badge background |
+
+| Role                       | Tailwind Token   | Value     | Usage                                                        |
+| -------------------------- | ---------------- | --------- | ------------------------------------------------------------ |
+| **Background (Primary)**   | `bg`             | `#FFFFFF` | Page background, white sections                              |
+| **Background (Alternate)** | `bg-alt`         | `#F9FAFB` | Alternating sections, input fields, icon containers          |
+| **Background (Elevated)**  | `bg-elevated`    | `#FFFFFF` | Cards, modals, elevated surfaces                             |
+| **Border**                 | `border`         | `#E5E7EB` | Card borders, dividers, input outlines                       |
+| **Border (Light)**         | `border-light`   | `#F3F4F6` | Very subtle separators                                       |
+| **Text (Primary)**         | `text-primary`   | `#111827` | Headlines, card titles, primary content                      |
+| **Text (Secondary)**       | `text-secondary` | `#6B7280` | Body copy, descriptions, nav links                           |
+| **Text (Muted)**           | `text-muted`     | `#9CA3AF` | Captions, metadata, section labels, placeholders             |
+| **Accent**                 | `accent`         | `#18181B` | Primary CTA buttons, inverted CTA blocks                     |
+| **Accent (Soft)**          | `accent-soft`    | `#F4F4F5` | Hover states on light backgrounds                            |
+| **Green**                  | `green`          | `#059669` | Positive indicators (return rates, online status, logo icon) |
+| **Green (Soft)**           | `green-soft`     | `#ECFDF5` | Return rate badge background                                 |
+
 
 ### Usage Principles
 
@@ -61,18 +63,20 @@ Inter is used for everything — headings, body, UI elements. No secondary typef
 
 ### Type Scale
 
-| Element | Size | Weight | Line Height | Letter Spacing | Tailwind Classes |
-|---------|------|--------|-------------|----------------|------------------|
-| **Hero Headline** | `clamp(2.25rem, 5vw, 4rem)` | 600 (semibold) | 1.1 | `-0.025em` | `text-[clamp(2.25rem,5vw,4rem)] font-semibold leading-[1.1] tracking-[-0.025em]` |
-| **Section Headline** | `1.875rem` / `2.25rem` | 600 (semibold) | 1.1 | `-0.02em` | `text-3xl sm:text-4xl font-semibold tracking-[-0.02em]` |
-| **Card Title** | `1rem` | 600 (semibold) | — | — | `text-base font-semibold` |
-| **Body (Large)** | `1.125rem` | 400 (regular) | 1.625 | `0` | `text-lg leading-relaxed` |
-| **Body (Default)** | `1rem` | 400 (regular) | 1.625 | `0` | `text-base leading-relaxed` |
-| **Body (Small)** | `0.875rem` | 400 (regular) | 1.625 | `0` | `text-sm leading-relaxed` |
-| **Section Label** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium text-text-muted` |
-| **Nav Links** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium text-text-secondary` |
-| **CTA Button Text** | `0.875rem` | 500 (medium) | — | `0` | `text-sm font-medium` |
-| **Caption / Label** | `0.75rem` | 500–600 | — | `wider` | `text-xs font-semibold uppercase tracking-wider` |
+
+| Element              | Size                        | Weight         | Line Height | Letter Spacing | Tailwind Classes                                                                 |
+| -------------------- | --------------------------- | -------------- | ----------- | -------------- | -------------------------------------------------------------------------------- |
+| **Hero Headline**    | `clamp(2.25rem, 5vw, 4rem)` | 600 (semibold) | 1.1         | `-0.025em`     | `text-[clamp(2.25rem,5vw,4rem)] font-semibold leading-[1.1] tracking-[-0.025em]` |
+| **Section Headline** | `1.875rem` / `2.25rem`      | 600 (semibold) | 1.1         | `-0.02em`      | `text-3xl sm:text-4xl font-semibold tracking-[-0.02em]`                          |
+| **Card Title**       | `1rem`                      | 600 (semibold) | —           | —              | `text-base font-semibold`                                                        |
+| **Body (Large)**     | `1.125rem`                  | 400 (regular)  | 1.625       | `0`            | `text-lg leading-relaxed`                                                        |
+| **Body (Default)**   | `1rem`                      | 400 (regular)  | 1.625       | `0`            | `text-base leading-relaxed`                                                      |
+| **Body (Small)**     | `0.875rem`                  | 400 (regular)  | 1.625       | `0`            | `text-sm leading-relaxed`                                                        |
+| **Section Label**    | `0.875rem`                  | 500 (medium)   | —           | `0`            | `text-sm font-medium text-text-muted`                                            |
+| **Nav Links**        | `0.875rem`                  | 500 (medium)   | —           | `0`            | `text-sm font-medium text-text-secondary`                                        |
+| **CTA Button Text**  | `0.875rem`                  | 500 (medium)   | —           | `0`            | `text-sm font-medium`                                                            |
+| **Caption / Label**  | `0.75rem`                   | 500–600        | —           | `wider`        | `text-xs font-semibold uppercase tracking-wider`                                 |
+
 
 ### Typographic Patterns
 
@@ -96,14 +100,16 @@ padding: 0 24px; /* px-6 */
 
 ### Section Rhythm
 
-| Property | Desktop | Mobile |
-|----------|---------|--------|
-| **Vertical section padding** | `128px` (`py-32`) | `96px` (`py-24`) |
-| **Space: label to heading** | `8px` (`mb-2`) | `8px` |
-| **Space: heading to body** | `16px` (`mb-4`) | `16px` |
-| **Space: section header to content** | `64px` (`mb-16`) | `64px` |
-| **Card gap** | `16px` (`gap-4`) | `16px` |
-| **Card internal padding** | `24px` (`p-6`) | `24px` |
+
+| Property                             | Desktop           | Mobile           |
+| ------------------------------------ | ----------------- | ---------------- |
+| **Vertical section padding**         | `128px` (`py-32`) | `96px` (`py-24`) |
+| **Space: label to heading**          | `8px` (`mb-2`)    | `8px`            |
+| **Space: heading to body**           | `16px` (`mb-4`)   | `16px`           |
+| **Space: section header to content** | `64px` (`mb-16`)  | `64px`           |
+| **Card gap**                         | `16px` (`gap-4`)  | `16px`           |
+| **Card internal padding**            | `24px` (`p-6`)    | `24px`           |
+
 
 ### Layout Patterns
 
@@ -124,20 +130,23 @@ padding: 0 24px; /* px-6 */
 Fixed top, white/frosted glass background, single bottom border.
 ```
 
-| Property | Value | Tailwind |
-|----------|-------|----------|
-| Position | Fixed, full-width, z-50 | `fixed top-0 left-0 right-0 z-50` |
-| Background | White at 80% opacity + blur | `bg-white/80 backdrop-blur-xl` |
-| Border | Bottom, `#E5E7EB` | `border-b border-border` |
-| Height | 64px | `h-16` |
-| Logo | `text-lg font-semibold` with green icon | — |
-| Nav links | `text-sm font-medium text-text-secondary` | hover → `text-text-primary` |
-| CTA button | Solid `bg-accent` (near-black), white text | `rounded-lg bg-accent px-5 py-2` |
-| Mobile | Hamburger toggle, dropdown with same styles | `md:hidden` / `md:flex` |
+
+| Property   | Value                                       | Tailwind                          |
+| ---------- | ------------------------------------------- | --------------------------------- |
+| Position   | Fixed, full-width, z-50                     | `fixed top-0 left-0 right-0 z-50` |
+| Background | White at 80% opacity + blur                 | `bg-white/80 backdrop-blur-xl`    |
+| Border     | Bottom, `#E5E7EB`                           | `border-b border-border`          |
+| Height     | 64px                                        | `h-16`                            |
+| Logo       | `text-lg font-semibold` with green icon     | —                                 |
+| Nav links  | `text-sm font-medium text-text-secondary`   | hover → `text-text-primary`       |
+| CTA button | Solid `bg-accent` (near-black), white text  | `rounded-lg bg-accent px-5 py-2`  |
+| Mobile     | Hamburger toggle, dropdown with same styles | `md:hidden` / `md:flex`           |
+
 
 ### Buttons
 
 **Primary CTA**
+
 ```
 Solid near-black background, white text. No gradients. Subtle opacity on hover.
 ```
@@ -149,6 +158,7 @@ transition-colors hover:bg-accent/90
 ```
 
 **Secondary / Ghost**
+
 ```
 White background, border, dark text. Light fill on hover.
 ```
@@ -160,6 +170,7 @@ transition-colors hover:bg-bg-alt
 ```
 
 **Inverted (on dark backgrounds)**
+
 ```
 White background, accent-colored text. Used inside the CTA section.
 ```
@@ -274,12 +285,14 @@ Framer Motion is used for **subtle entrance animations only**:
 
 ### Shadows
 
-| Use Case | Value | Tailwind |
-|----------|-------|----------|
-| **Default card** | None (border only) | — |
-| **Card hover** | `0 4px 6px -1px rgba(0,0,0,0.1)` | `shadow-md` |
-| **Chat mockup** | `0 1px 2px rgba(0,0,0,0.05)` | `shadow-sm` |
-| **CTA section** | None | — |
+
+| Use Case         | Value                            | Tailwind    |
+| ---------------- | -------------------------------- | ----------- |
+| **Default card** | None (border only)               | —           |
+| **Card hover**   | `0 4px 6px -1px rgba(0,0,0,0.1)` | `shadow-md` |
+| **Chat mockup**  | `0 1px 2px rgba(0,0,0,0.05)`     | `shadow-sm` |
+| **CTA section**  | None                             | —           |
+
 
 ### Dividers
 
@@ -302,6 +315,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ## 8. Section Structure Reference
 
 ### Hero Section
+
 ```
 [Navbar — fixed, white frosted glass]
 [Badge pill — "AI-Powered Alternative Investments"]
@@ -312,6 +326,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ```
 
 ### Features Section (bg-alt)
+
 ```
 [Section label — "Investment Options", text-sm text-text-muted]
 [H2 — left-aligned, text-3xl/4xl]
@@ -321,6 +336,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ```
 
 ### AI Advisor Section (bg-white)
+
 ```
 [50/50 split grid]
   [Left: label → H2 → body → feature list with icons]
@@ -328,6 +344,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ```
 
 ### How It Works Section (bg-alt)
+
 ```
 [Section label → H2 → body paragraph]
 [3-column card grid]
@@ -335,6 +352,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ```
 
 ### CTA Section (bg-white, contains dark card)
+
 ```
 [Rounded dark (bg-accent) card, centered within max-w-6xl]
   [H2 — white text]
@@ -343,6 +361,7 @@ Framer Motion is used for **subtle entrance animations only**:
 ```
 
 ### Footer (bg-white, border-t)
+
 ```
 [4-column grid: brand + 3 link columns]
 [Bottom bar: copyright left, disclaimer right]
@@ -352,12 +371,14 @@ Framer Motion is used for **subtle entrance animations only**:
 
 ## 9. Responsive Behavior
 
-| Breakpoint | Tailwind Prefix | Behavior |
-|------------|-----------------|----------|
-| `< 640px` (mobile) | default | Single column, full-width buttons stacked, hamburger nav, `py-24` sections |
-| `640–768px` (sm) | `sm:` | Two-column card grids, inline buttons, `py-32` sections |
-| `768–1024px` (md) | `md:` | Desktop nav visible (`md:flex`), three-column grids |
-| `> 1024px` (lg) | `lg:` | 50/50 splits for AI section, full three-column grids |
+
+| Breakpoint         | Tailwind Prefix | Behavior                                                                   |
+| ------------------ | --------------- | -------------------------------------------------------------------------- |
+| `< 640px` (mobile) | default         | Single column, full-width buttons stacked, hamburger nav, `py-24` sections |
+| `640–768px` (sm)   | `sm:`           | Two-column card grids, inline buttons, `py-32` sections                    |
+| `768–1024px` (md)  | `md:`           | Desktop nav visible (`md:flex`), three-column grids                        |
+| `> 1024px` (lg)    | `lg:`           | 50/50 splits for AI section, full three-column grids                       |
+
 
 - Hero headline uses `clamp(2.25rem, 5vw, 4rem)` for fluid scaling
 - Section headings use `text-3xl sm:text-4xl` (responsive step)

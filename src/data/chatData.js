@@ -41,6 +41,17 @@ const txnChartData = [
   { name: 'Withdrawals', value: txnSummary.withdrawals, color: '#DC2626' },
 ];
 
+/** Assigned relationship manager (showcase — replace with live profile later). */
+export const RELATIONSHIP_MANAGER_NAME = 'Rajesh Menon';
+
+export const rmSuggestedQuestions = [
+  { id: 'rm-annual-review', label: 'Schedule my portfolio review' },
+  { id: 'rm-rebalance', label: 'Help me rebalance my allocation' },
+  { id: 'rm-goals', label: 'Discuss my investment goals' },
+  { id: 'rm-tax', label: 'Tax-efficient investing options' },
+  { id: 'rm-exclusive', label: 'Any exclusive deals for me?' },
+];
+
 export const suggestedQuestions = [
   { id: 'portfolio', label: 'How is my portfolio performing?' },
   { id: 'allocation', label: 'Show my asset allocation' },
@@ -180,6 +191,36 @@ export const chatResponses = {
 
   fallback: {
     text: "I'm still learning! I can help you with portfolio performance, asset allocation, repayments, returns, marketplace opportunities, risk exposure, FD comparisons, and transaction summaries. Try picking one of the suggested questions below.",
+    chart: null,
+  },
+
+  'rm-annual-review': {
+    text: `Hi — it's ${RELATIONSHIP_MANAGER_NAME.split(' ')[0]} here. I've reviewed your portfolio notes and I'd be happy to walk through a full annual review on a quick call. I'll look at performance vs your risk band, any concentration risk, and what's maturing in the next quarter. Shall we lock a 20-minute slot this week?`,
+    chart: null,
+  },
+
+  'rm-rebalance': {
+    text: `Good question. Based on your current mix, I'd trim a little from the highest-yield (and higher-risk) tranches and redeploy toward shorter-tenor invoice discounting to bring volatility down. I can send a one-page proposal before you confirm — want me to prioritise **safety** or **yield** for the rebalance?`,
+    chart: null,
+  },
+
+  'rm-goals': {
+    text: `Let's align on horizons: are you optimising for a **near-term goal** (1–2 yrs), **wealth build** (5+ yrs), or **regular income**? Once I know that, I'll map products on the platform to each bucket and we can stress-test a 10% market dip scenario together.`,
+    chart: null,
+  },
+
+  'rm-tax': {
+    text: `For tax efficiency we usually look at holding period, instrument type, and whether you're booking gains this FY. I can't give personal tax advice here, but I can outline how repayments are typically treated and flag structures clients often review with their CA — happy to share a short checklist.`,
+    chart: null,
+  },
+
+  'rm-exclusive': {
+    text: `We occasionally reserve capacity on oversubscribed deals for active clients. Nothing guaranteed, but I'll flag the next **private credit** and **revenue-based** windows that fit your ticket size. I'll also note if any early-access tranche opens this month.`,
+    chart: null,
+  },
+
+  'rm-fallback': {
+    text: `Thanks for the message — I'll read this in detail and reply properly. In the meantime, feel free to ask about **reviews**, **rebalancing**, **goals**, **tax-aware investing**, or **exclusive allocations**, or tell me if you'd prefer a call.`,
     chart: null,
   },
 };

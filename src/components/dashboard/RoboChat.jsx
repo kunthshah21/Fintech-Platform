@@ -1,7 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, Sparkles, RotateCcw } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Send, Bot, User, Sparkles, RotateCcw, Headset } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { suggestedQuestions, chatResponses } from '../../data/chatData';
+import {
+  suggestedQuestions,
+  rmSuggestedQuestions,
+  chatResponses,
+  RELATIONSHIP_MANAGER_NAME,
+} from '../../data/chatData';
 import { useApp } from '../../context/AppContext';
 import ChatChart from './ChatChart';
 
@@ -39,13 +44,39 @@ function matchQuestion(input) {
   return null;
 }
 
-export default function RoboChat() {
+function matchRmQuestion(input) {
+  const lower = input.toLowerCase().trim();
+  const keywords = {
+    'rm-annual-review': ['review', 'annual', 'schedule', 'call', 'meeting'],
+    'rm-rebalance': ['rebalance', 'allocation', 'trim', 'mix', 'diversif'],
+    'rm-goals': ['goal', 'horizon', 'plan', 'future', 'retire'],
+    'rm-tax': ['tax', 'efficient', 'capital gain', 'fy', 'ca'],
+    'rm-exclusive': ['exclusive', 'deal', 'private', 'early', 'access', 'oversubscrib'],
+  };
+  for (const [key, terms] of Object.entries(keywords)) {
+    if (terms.some((t) => lower.includes(t))) return key;
+  }
+  return null;
+}
+
+export default function RoboChat({ onChatHeaderChange = () => {} }) {
   const { user } = useApp();
   const [messages, setMessages] = useState([GREETING_MSG]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isRmSession, setIsRmSession] = useState(false);
+  const isRmSessionRef = useRef(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    isRmSessionRef.current = isRmSession;
+  }, [isRmSession]);
+
+  const userPromptCount = useMemo(
+    () => messages.filter((m) => m.role === 'user').length,
+    [messages]
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -56,10 +87,18 @@ export default function RoboChat() {
     const delay = 600 + Math.random() * 800;
 
     setTimeout(() => {
-      const response = chatResponses[questionId] || chatResponses.fallback;
+      const rm = isRmSessionRef.current;
+      const response =
+        chatResponses[questionId] || (rm ? chatResponses['rm-fallback'] : chatResponses.fallback);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), role: 'bot', text: response.text, chart: response.chart },
+        {
+          id: Date.now(),
+          role: 'bot',
+          text: response.text,
+          chart: response.chart,
+          fromRm: rm,
+        },
       ]);
       setIsTyping(false);
     }, delay);
@@ -72,9 +111,9 @@ export default function RoboChat() {
     setMessages((prev) => [...prev, { id: Date.now(), role: 'user', text: trimmed }]);
     setInput('');
 
-    const matched = matchQuestion(trimmed);
-    addBotResponse(matched || 'fallback');
-  }, [input, addBotResponse]);
+    const matched = isRmSession ? matchRmQuestion(trimmed) : matchQuestion(trimmed);
+    addBotResponse(matched || (isRmSession ? 'rm-fallback' : 'fallback'));
+  }, [input, addBotResponse, isRmSession]);
 
   const handleSuggestion = useCallback((q) => {
     setMessages((prev) => [...prev, { id: Date.now(), role: 'user', text: q.label }]);
@@ -85,7 +124,22 @@ export default function RoboChat() {
     setMessages([GREETING_MSG]);
     setInput('');
     setIsTyping(false);
-  }, []);
+    setIsRmSession(false);
+    onChatHeaderChange('AI Assistant');
+  }, [onChatHeaderChange]);
+
+  const handleAskRelationshipManager = useCallback(() => {
+    setIsRmSession(true);
+    onChatHeaderChange(RELATIONSHIP_MANAGER_NAME);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `rm-handoff-${Date.now()}`,
+        role: 'handoff',
+        rmName: RELATIONSHIP_MANAGER_NAME,
+      },
+    ]);
+  }, [onChatHeaderChange]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -94,7 +148,14 @@ export default function RoboChat() {
     }
   };
 
-  const showSuggestions = messages.length <= 1 || messages[messages.length - 1]?.role === 'bot';
+  const lastRole = messages[messages.length - 1]?.role;
+  const showSuggestions =
+    (messages.length <= 1 ||
+      lastRole === 'bot' ||
+      lastRole === 'handoff') &&
+    !isTyping;
+
+  const suggestionList = isRmSession ? rmSuggestedQuestions : suggestedQuestions;
 
   return (
     <div className="flex flex-col h-[calc(100vh-10rem)] max-w-3xl mx-auto">
@@ -109,10 +170,12 @@ export default function RoboChat() {
             >
               {msg.id === 'greeting' ? (
                 <GreetingMessage name={user.name} />
+              ) : msg.role === 'handoff' ? (
+                <RmHandoffLine name={msg.rmName} />
               ) : msg.role === 'user' ? (
                 <UserBubble text={msg.text} />
               ) : (
-                <BotBubble text={msg.text} chart={msg.chart} />
+                <BotBubble text={msg.text} chart={msg.chart} fromRm={msg.fromRm} />
               )}
             </motion.div>
           ))}
@@ -120,8 +183,16 @@ export default function RoboChat() {
 
         {isTyping && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent">
-              <Bot className="h-4 w-4 text-white" />
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                isRmSession ? 'bg-green/20' : 'bg-accent'
+              }`}
+            >
+              {isRmSession ? (
+                <Headset className="h-4 w-4 text-green" />
+              ) : (
+                <Bot className="h-4 w-4 text-white" />
+              )}
             </div>
             <div className="rounded-2xl rounded-tl-sm bg-bg-alt border border-border px-4 py-3">
               <div className="flex gap-1">
@@ -136,10 +207,10 @@ export default function RoboChat() {
         <div ref={bottomRef} />
       </div>
 
-      {showSuggestions && !isTyping && (
+      {showSuggestions && (
         <div className="pb-3 pt-1">
           <div className="flex flex-wrap gap-2">
-            {suggestedQuestions
+            {suggestionList
               .filter((q) => !messages.some((m) => m.role === 'user' && m.text === q.label))
               .slice(0, 5)
               .map((q) => (
@@ -157,6 +228,27 @@ export default function RoboChat() {
       )}
 
       <div className="border-t border-border pt-3 pb-1">
+        <AnimatePresence>
+          {userPromptCount >= 3 && !isRmSession && (
+            <motion.div
+              key="rm-cta"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden mb-2"
+            >
+              <button
+                type="button"
+                onClick={handleAskRelationshipManager}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-bg-alt px-3 py-2 text-xs font-medium text-text-secondary hover:border-accent hover:bg-accent-soft hover:text-accent transition-all duration-150"
+              >
+                <Headset className="h-3.5 w-3.5 shrink-0" />
+                Ask a Relationship Manager
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="flex items-center gap-2">
           <div className="flex-1 flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20 transition-all">
             <input
@@ -164,7 +256,11 @@ export default function RoboChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about your portfolio, returns, opportunities..."
+              placeholder={
+                isRmSession
+                  ? `Message ${RELATIONSHIP_MANAGER_NAME.split(' ')[0]}…`
+                  : 'Ask about your portfolio, returns, opportunities...'
+              }
               className="flex-1 text-sm text-text-primary placeholder:text-text-muted outline-none bg-transparent"
             />
             <button
@@ -221,11 +317,31 @@ function UserBubble({ text }) {
   );
 }
 
-function BotBubble({ text, chart }) {
+function RmHandoffLine({ name }) {
+  return (
+    <div className="flex flex-col items-stretch gap-3 py-2">
+      <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent opacity-80" />
+      <p className="text-center text-xs text-text-muted">
+        Chatting with{' '}
+        <span className="font-medium text-text-secondary">{name}</span>
+      </p>
+    </div>
+  );
+}
+
+function BotBubble({ text, chart, fromRm }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent">
-        <Bot className="h-4 w-4 text-white" />
+      <div
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+          fromRm ? 'bg-green/20' : 'bg-accent'
+        }`}
+      >
+        {fromRm ? (
+          <Headset className="h-4 w-4 text-green" />
+        ) : (
+          <Bot className="h-4 w-4 text-white" />
+        )}
       </div>
       <div className="rounded-2xl rounded-tl-sm bg-bg-alt border border-border px-5 py-4 max-w-[85%] min-w-[260px]">
         <p

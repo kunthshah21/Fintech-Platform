@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { IndianRupee, TrendingUp, PiggyBank, BarChart3, ArrowRight, MessageSquare, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +17,11 @@ export default function DashboardHome() {
 
   const featured = isNewUser ? recommendations : opportunities.slice(0, 3);
   const isChat = viewMode === 'chat';
+  const [chatHeaderLabel, setChatHeaderLabel] = useState('AI Assistant');
+
+  useEffect(() => {
+    if (!isChat) setChatHeaderLabel('AI Assistant');
+  }, [isChat]);
 
   return (
     <div className="max-w-6xl">
@@ -27,7 +33,7 @@ export default function DashboardHome() {
             <LayoutGrid className="h-4 w-4 text-text-muted" />
           )}
           <span className="text-sm font-medium text-text-secondary">
-            {isChat ? 'AI Assistant' : 'Dashboard'}
+            {isChat ? chatHeaderLabel : 'Dashboard'}
           </span>
         </div>
 
@@ -62,7 +68,7 @@ export default function DashboardHome() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <RoboChat />
+            <RoboChat onChatHeaderChange={setChatHeaderLabel} />
           </motion.div>
         ) : (
           <motion.div
