@@ -260,11 +260,15 @@ function ListOption({ option, selected, onSelect }) {
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { registerNewUser } = useApp();
+  const { registerNewUser, isAuthenticated, signUp } = useApp();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [direction, setDirection] = useState(1);
   const [analyzing, setAnalyzing] = useState(false);
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpError, setSignUpError] = useState('');
+  const [signingUp, setSigningUp] = useState(false);
 
   const totalSteps = questions.length;
   const isComplete = step >= totalSteps;
@@ -282,7 +286,6 @@ export default function Onboarding() {
       setDirection(1);
       setStep(totalSteps);
       setAnalyzing(true);
-      localStorage.setItem('yieldvest_onboarding', JSON.stringify(answers));
       setTimeout(() => setAnalyzing(false), 3000);
     }
   };
@@ -302,7 +305,7 @@ export default function Onboarding() {
     }
   };
 
-  const handleGoToDashboard = () => {
+  const handleGoToDashboard = async () => {
     const { name, ...rest } = answers;
     const scoredData = {};
     questions.forEach((q) => {
@@ -310,7 +313,24 @@ export default function Onboarding() {
       const map = SCORE_MAP[q.id];
       scoredData[q.id] = map ? map[rest[q.id]] : rest[q.id];
     });
-    registerNewUser(name || 'Investor', scoredData);
+
+    if (!isAuthenticated) {
+      if (!signUpEmail.trim() || !signUpPassword.trim()) {
+        setSignUpError('Please enter your email and password to create an account.');
+        return;
+      }
+      setSigningUp(true);
+      setSignUpError('');
+      const result = await signUp(signUpEmail.trim(), signUpPassword, name || 'Investor');
+      if (!result.success) {
+        setSignUpError(result.error || 'Sign up failed.');
+        setSigningUp(false);
+        return;
+      }
+    }
+
+    await registerNewUser(name || 'Investor', scoredData);
+    setSigningUp(false);
     navigate('/dashboard');
   };
 
@@ -443,12 +463,43 @@ export default function Onboarding() {
                         </div>
                       ))}
                     </div>
+                    {!isAuthenticated && (
+                      <div className="space-y-3 text-left max-w-xs mx-auto">
+                        <div>
+                          <label className="text-xs font-medium text-text-muted mb-1 block">Email</label>
+                          <input
+                            type="email"
+                            value={signUpEmail}
+                            onChange={(e) => { setSignUpEmail(e.target.value); setSignUpError(''); }}
+                            placeholder="your@email.com"
+                            className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-text-muted mb-1 block">Password</label>
+                          <input
+                            type="password"
+                            value={signUpPassword}
+                            onChange={(e) => { setSignUpPassword(e.target.value); setSignUpError(''); }}
+                            placeholder="Create a password (min 6 chars)"
+                            className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                          />
+                        </div>
+                        {signUpError && (
+                          <p className="text-xs text-red">{signUpError}</p>
+                        )}
+                      </div>
+                    )}
                     <button
                       onClick={handleGoToDashboard}
-                      className="group inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90"
+                      disabled={signingUp}
+                      className="group inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:bg-border disabled:text-text-muted"
                     >
-                      Go to Dashboard
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      {signingUp ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Creating account...</>
+                      ) : (
+                        <>Go to Dashboard <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
+                      )}
                     </button>
                   </motion.div>
                 );

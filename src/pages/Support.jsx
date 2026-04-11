@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, ShieldCheck, HelpCircle, IndianRupee, ArrowDownToLine,
   FileText, UserCog, Scale, ChevronDown, ChevronUp,
-  Send, Paperclip, Mail, Phone, MessageCircle,
+  Send, Paperclip, Mail, Phone, MessageCircle, Loader2, Check,
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const categories = [
   { id: 'kyc', label: 'KYC Help', icon: ShieldCheck },
@@ -33,11 +34,16 @@ const faqs = [
 const ticketCategories = ['KYC Issue', 'Investment Query', 'Repayment Delay', 'Withdrawal Issue', 'Tax & Statements', 'Account Problem', 'Other'];
 
 export default function Support() {
+  const { createTicket, fetchTickets } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [activeTab, setActiveTab] = useState('faq');
   const [ticketForm, setTicketForm] = useState({ category: '', subject: '', description: '' });
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const filteredFaqs = faqs.filter((f) => {
     if (activeCategory && f.category !== activeCategory) return false;
@@ -48,22 +54,39 @@ export default function Support() {
     return true;
   });
 
-  const mockTickets = [
-    { id: 'TKT-001', subject: 'KYC document re-upload', status: 'resolved', date: '2026-03-28' },
-    { id: 'TKT-002', subject: 'Repayment not received', status: 'in_progress', date: '2026-04-05' },
-  ];
+  useEffect(() => {
+    if (activeTab === 'my_tickets') {
+      setLoadingTickets(true);
+      fetchTickets().then((data) => {
+        setTickets(data);
+        setLoadingTickets(false);
+      });
+    }
+  }, [activeTab, fetchTickets]);
+
+  const handleSubmitTicket = async () => {
+    if (!ticketForm.category || !ticketForm.subject) return;
+    setSubmitting(true);
+    const result = await createTicket(ticketForm);
+    setSubmitting(false);
+    if (result) {
+      setSubmitSuccess(true);
+      setTicketForm({ category: '', subject: '', description: '' });
+      setTimeout(() => setSubmitSuccess(false), 3000);
+    }
+  };
 
   const ticketStatusStyles = {
     open: 'bg-blue-soft text-blue',
     in_progress: 'bg-amber-soft text-amber',
     resolved: 'bg-green-soft text-green',
+    closed: 'bg-gray-100 text-gray-500',
   };
 
   return (
     <div className="max-w-3xl space-y-6">
       <h1 className="text-xl font-semibold text-text-primary">Help & support</h1>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-text-muted" />
         <input
@@ -75,7 +98,6 @@ export default function Support() {
         />
       </div>
 
-      {/* Category tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {categories.slice(0, 8).map(({ id, label, icon: Icon }) => (
           <button
@@ -93,7 +115,6 @@ export default function Support() {
         ))}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {[
           { id: 'faq', label: 'FAQs' },
@@ -112,7 +133,6 @@ export default function Support() {
         ))}
       </div>
 
-      {/* FAQ */}
       {activeTab === 'faq' && (
         <div className="space-y-2">
           {filteredFaqs.length === 0 ? (
@@ -140,9 +160,13 @@ export default function Support() {
         </div>
       )}
 
-      {/* Raise Ticket */}
       {activeTab === 'ticket' && (
         <div className="rounded-xl border border-border bg-white p-5 space-y-4">
+          {submitSuccess && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-soft px-4 py-3 text-sm font-medium text-green">
+              <Check className="h-4 w-4" /> Ticket submitted successfully!
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-text-muted mb-1 block">Category</label>
             <select
@@ -180,36 +204,51 @@ export default function Support() {
             </button>
           </div>
           <button
-            disabled={!ticketForm.category || !ticketForm.subject}
+            onClick={handleSubmitTicket}
+            disabled={!ticketForm.category || !ticketForm.subject || submitting}
             className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent/90 transition-colors disabled:bg-border disabled:text-text-muted disabled:cursor-not-allowed"
           >
-            <Send className="h-4 w-4" /> Submit Ticket
+            {submitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>
+            ) : (
+              <><Send className="h-4 w-4" /> Submit Ticket</>
+            )}
           </button>
         </div>
       )}
 
-      {/* My Tickets */}
       {activeTab === 'my_tickets' && (
         <div className="space-y-3">
-          {mockTickets.map((ticket) => (
-            <div key={ticket.id} className="rounded-xl border border-border bg-white p-4 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-text-muted">{ticket.id}</span>
-                  <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold capitalize ${ticketStatusStyles[ticket.status]}`}>
-                    {ticket.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-text-primary mt-1">{ticket.subject}</p>
-                <p className="text-xs text-text-muted mt-0.5">{new Date(ticket.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-              </div>
-              <button className="text-xs font-medium text-accent hover:underline">View</button>
+          {loadingTickets ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-text-muted" />
             </div>
-          ))}
+          ) : tickets.length === 0 ? (
+            <div className="rounded-xl border border-border bg-white p-8 text-center">
+              <p className="text-sm text-text-secondary">No tickets found. Raise a ticket if you need help.</p>
+            </div>
+          ) : (
+            tickets.map((ticket) => (
+              <div key={ticket.id} className="rounded-xl border border-border bg-white p-4 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-text-muted">{ticket.ticket_number || ticket.id.slice(0, 8)}</span>
+                    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold capitalize ${ticketStatusStyles[ticket.status] || 'bg-gray-100 text-gray-500'}`}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-text-primary mt-1">{ticket.subject}</p>
+                  <p className="text-xs text-text-muted mt-0.5">{new Date(ticket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-text-muted">{ticket.category}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
 
-      {/* Contact info */}
       <div className="rounded-xl border border-border bg-white p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-4">Contact us</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -229,7 +268,7 @@ export default function Support() {
             <div>
               <p className="text-xs text-text-muted">Phone</p>
               <p className="text-sm font-medium text-text-primary">1800-XXX-XXXX</p>
-              <p className="text-[10px] text-text-muted">Mon–Sat, 9AM–6PM</p>
+              <p className="text-[10px] text-text-muted">Mon-Sat, 9AM-6PM</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -244,7 +283,6 @@ export default function Support() {
         </div>
       </div>
 
-      {/* Grievance */}
       <div className="rounded-xl border border-border bg-white p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-2">Grievance Redressal Officer</h3>
         <p className="text-sm text-text-secondary">Mr. Rajesh Kumar</p>

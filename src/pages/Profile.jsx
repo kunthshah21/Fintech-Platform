@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Phone, Calendar, ShieldCheck, Landmark, SlidersHorizontal,
   Lock, Users, Share2, Copy, Check, ChevronDown, ChevronUp, Trash2, AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -26,20 +27,61 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
   );
 }
 
-function FieldRow({ label, value, editable = false }) {
+function EditableFieldRow({ label, value, fieldKey, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave({ [fieldKey]: editValue });
+    setSaving(false);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center justify-between py-2.5 border-b border-border-light last:border-0 gap-2">
+        <span className="text-sm text-text-muted shrink-0">{label}</span>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="rounded-md border border-border bg-bg-alt px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/20 w-44"
+            autoFocus
+          />
+          <button onClick={handleSave} disabled={saving} className="text-xs text-green font-medium hover:underline">
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Save'}
+          </button>
+          <button onClick={() => { setEditing(false); setEditValue(value); }} className="text-xs text-text-muted hover:underline">Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-border-light last:border-0">
       <span className="text-sm text-text-muted">{label}</span>
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-text-primary">{value}</span>
-        {editable && <button className="text-xs text-accent hover:underline">Edit</button>}
+        <span className="text-sm font-medium text-text-primary">{value || '—'}</span>
+        <button onClick={() => setEditing(true)} className="text-xs text-accent hover:underline">Edit</button>
       </div>
     </div>
   );
 }
 
+function FieldRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-border-light last:border-0">
+      <span className="text-sm text-text-muted">{label}</span>
+      <span className="text-sm font-medium text-text-primary">{value || '—'}</span>
+    </div>
+  );
+}
+
 export default function Profile() {
-  const { user, kyc, isKycVerified } = useApp();
+  const { user, kyc, isKycVerified, updateProfile } = useApp();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [riskAppetite, setRiskAppetite] = useState('moderate');
@@ -71,11 +113,11 @@ export default function Profile() {
       {/* Personal Info */}
       <Section title="Personal information" icon={User}>
         <div>
-          <FieldRow label="Full name" value={user.name} editable />
-          <FieldRow label="Email" value={user.email} editable />
-          <FieldRow label="Mobile" value={user.mobile} editable />
-          <FieldRow label="Date of birth" value={new Date(user.dob).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} />
-          <FieldRow label="Member since" value={new Date(user.joinedDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} />
+          <EditableFieldRow label="Full name" value={user.name} fieldKey="name" onSave={updateProfile} />
+          <EditableFieldRow label="Email" value={user.email} fieldKey="email" onSave={updateProfile} />
+          <EditableFieldRow label="Mobile" value={user.mobile} fieldKey="mobile" onSave={updateProfile} />
+          <EditableFieldRow label="Date of birth" value={user.dob} fieldKey="dob" onSave={updateProfile} />
+          <FieldRow label="Member since" value={user.joinedDate ? new Date(user.joinedDate).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—'} />
         </div>
       </Section>
 

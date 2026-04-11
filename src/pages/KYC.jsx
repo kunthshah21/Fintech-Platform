@@ -442,7 +442,7 @@ function ReviewStep({ kyc, onSubmit }) {
 }
 
 export default function KYC() {
-  const { kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified } = useApp();
+  const { kyc, updateKyc, completeKycStep, verifyKyc, persistKycStatus, isKycVerified } = useApp();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(kyc.currentStep < 4 ? kyc.currentStep : 0);
   const [localKyc, setLocalKyc] = useState(kyc);
@@ -454,6 +454,15 @@ export default function KYC() {
 
   const handleStepVerify = (step, data) => {
     completeKycStep(step, data);
+
+    if (step === 0) {
+      persistKycStatus('in_progress', { pan_number: data.number || data.name });
+    } else if (step === 1) {
+      persistKycStatus('in_progress', { aadhaar_verified: true });
+    } else if (step === 2) {
+      persistKycStatus('in_progress', { bank_verified: true });
+    }
+
     if (step < 3) {
       setTimeout(() => setCurrentStep(step + 1), 400);
     }

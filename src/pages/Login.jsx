@@ -6,48 +6,75 @@ import { useApp } from '../context/AppContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, loginWithDigiLocker, isAuthenticated } = useApp();
+  const { login, signUp, loginWithDigiLocker, isAuthenticated } = useApp();
 
-  const [username, setUsername] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [digiLoading, setDigiLoading] = useState(false);
+  const [digiEmail, setDigiEmail] = useState('');
+  const [digiPassword, setDigiPassword] = useState('');
+  const [showDigiForm, setShowDigiForm] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleCredentialLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError('Please enter both ID name and password.');
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter both email and password.');
+      return;
+    }
+    if (isSignUp && !name.trim()) {
+      setError('Please enter your name.');
       return;
     }
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      const success = login(username.trim(), password);
+    if (isSignUp) {
+      const result = await signUp(email.trim(), password, name.trim());
       setLoading(false);
-      if (success) {
+      if (result.success) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        setError(result.error || 'Sign up failed. Please try again.');
+      }
+    } else {
+      const result = await login(email.trim(), password);
+      setLoading(false);
+      if (result.success) {
         navigate('/dashboard', { replace: true });
       } else {
-        setError('Invalid credentials. Please check your ID name and password.');
+        setError(result.error || 'Invalid credentials. Please check your email and password.');
       }
-    }, 800);
+    }
   };
 
-  const handleDigiLockerLogin = () => {
+  const handleDigiLockerLogin = async () => {
+    if (!showDigiForm) {
+      setShowDigiForm(true);
+      return;
+    }
+    if (!digiEmail.trim() || !digiPassword.trim()) {
+      setError('Please enter email and password for DigiLocker sign up.');
+      return;
+    }
     setError('');
     setDigiLoading(true);
 
-    setTimeout(() => {
-      loginWithDigiLocker('DigiLocker User');
-      setDigiLoading(false);
+    const result = await loginWithDigiLocker('DigiLocker User', digiEmail.trim(), digiPassword);
+    setDigiLoading(false);
+    if (result.success) {
       navigate('/dashboard', { replace: true });
-    }, 2000);
+    } else {
+      setError(result.error || 'DigiLocker sign up failed.');
+    }
   };
 
   return (
@@ -63,23 +90,42 @@ export default function Login() {
             <TrendingUp className="h-6 w-6 text-green" />
             YieldVest
           </div>
-          <p className="text-sm text-text-secondary">Sign in to your investment dashboard</p>
+          <p className="text-sm text-text-secondary">
+            {isSignUp ? 'Create your investment account' : 'Sign in to your investment dashboard'}
+          </p>
         </div>
 
-        <form onSubmit={handleCredentialLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <div>
+              <label htmlFor="name" className="block text-xs font-medium text-text-muted mb-1.5">
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setError(''); }}
+                placeholder="Enter your name"
+                className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                autoFocus={isSignUp}
+              />
+            </div>
+          )}
+
           <div>
-            <label htmlFor="username" className="block text-xs font-medium text-text-muted mb-1.5">
-              ID Name
+            <label htmlFor="email" className="block text-xs font-medium text-text-muted mb-1.5">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => { setUsername(e.target.value); setError(''); }}
-              placeholder="Enter your ID name"
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(''); }}
+              placeholder="Enter your email"
               className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-              autoComplete="username"
-              autoFocus
+              autoComplete="email"
+              autoFocus={!isSignUp}
             />
           </div>
 
@@ -95,7 +141,7 @@ export default function Login() {
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                 placeholder="Enter your password"
                 className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 pr-10 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                autoComplete="current-password"
+                autoComplete={isSignUp ? 'new-password' : 'current-password'}
               />
               <button
                 type="button"
@@ -128,9 +174,9 @@ export default function Login() {
             className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:bg-border disabled:text-text-muted inline-flex items-center justify-center gap-2"
           >
             {loading ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Signing in...</>
+              <><Loader2 className="h-4 w-4 animate-spin" /> {isSignUp ? 'Creating account...' : 'Signing in...'}</>
             ) : (
-              <>Sign In <ArrowRight className="h-4 w-4" /></>
+              <>{isSignUp ? 'Create Account' : 'Sign In'} <ArrowRight className="h-4 w-4" /></>
             )}
           </button>
         </form>
@@ -143,6 +189,25 @@ export default function Login() {
             <span className="bg-bg px-3 text-text-muted">or continue with</span>
           </div>
         </div>
+
+        {showDigiForm && (
+          <div className="space-y-3 mb-4">
+            <input
+              type="email"
+              value={digiEmail}
+              onChange={(e) => { setDigiEmail(e.target.value); setError(''); }}
+              placeholder="Email for DigiLocker account"
+              className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+            />
+            <input
+              type="password"
+              value={digiPassword}
+              onChange={(e) => { setDigiPassword(e.target.value); setError(''); }}
+              placeholder="Create a password"
+              className="w-full rounded-lg border border-border bg-bg-alt px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+            />
+          </div>
+        )}
 
         <button
           onClick={handleDigiLockerLogin}
@@ -160,10 +225,25 @@ export default function Login() {
         </p>
 
         <div className="mt-6 text-center text-sm text-text-secondary">
-          Don&apos;t have an account?{' '}
-          <Link to="/onboarding" className="font-medium text-accent hover:underline">
-            Get Started
-          </Link>
+          {isSignUp ? (
+            <>
+              Already have an account?{' '}
+              <button onClick={() => { setIsSignUp(false); setError(''); }} className="font-medium text-accent hover:underline">
+                Sign In
+              </button>
+            </>
+          ) : (
+            <>
+              Don&apos;t have an account?{' '}
+              <button onClick={() => { setIsSignUp(true); setError(''); }} className="font-medium text-accent hover:underline">
+                Create Account
+              </button>
+              {' '}or{' '}
+              <Link to="/onboarding" className="font-medium text-accent hover:underline">
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

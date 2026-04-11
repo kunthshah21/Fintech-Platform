@@ -14,7 +14,14 @@ import Profile from './pages/Profile';
 import Support from './pages/Support';
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, loading } = useApp();
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-bg-alt">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-accent" />
+      </div>
+    );
+  }
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 }

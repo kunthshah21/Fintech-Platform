@@ -1,25 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 import {
-  defaultUser, userPortfolio, notifications as defaultNotifications,
-  registeredUsers, emptyPortfolio, opportunities, activeInvestments,
+  notifications as defaultNotifications,
+  opportunities, emptyPortfolio,
 } from '../data/mockData';
 
 const AppContext = createContext(null);
-
-const STORAGE_KEY = 'yieldvest_app_state';
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
 
 const initialKyc = {
   status: 'not_started',
@@ -60,6 +46,12 @@ function computeInvestorProfile(answers) {
   };
 }
 
+function quadrantToRiskLevel(quadrant) {
+  if (quadrant === 'aggressive') return 'high';
+  if (quadrant === 'cautious-wealthy') return 'medium';
+  return 'low';
+}
+
 function getRecommendations(onboardingAnswers) {
   if (!onboardingAnswers) return opportunities.slice(0, 3);
 
@@ -78,9 +70,7 @@ function getRecommendations(onboardingAnswers) {
 
   const scored = filtered.map((opp) => {
     let score = 0;
-
     if (preferredTypes.includes(opp.productType)) score += 5;
-
     if (profile.quadrant === 'cautious-wealthy') {
       if (opp.riskRating === 'Low') score += 3;
       if (opp.riskRating === 'Medium') score += 1;
@@ -95,12 +85,10 @@ function getRecommendations(onboardingAnswers) {
       if (opp.minInvestment <= 25000) score += 2;
       if (opp.returnRate >= 14) score += 2;
     }
-
     if (profile.goal === 'fd-beater' && opp.riskRating === 'Low') score += 2;
     if (profile.goal === 'cashflow' && opp.paymentFrequency === 'Monthly') score += 2;
     if (profile.goal === 'diversify-equity') score += 1;
     if (profile.goal === 'max-yield' && opp.returnRate >= 15) score += 2;
-
     return { ...opp, _score: score };
   });
 
@@ -109,59 +97,261 @@ function getRecommendations(onboardingAnswers) {
 }
 
 export function AppProvider({ children }) {
-  const saved = loadState();
+  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [hasSeenTour, setHasSeenTour] = useState(false);
+  const [onboardingAnswers, setOnboardingAnswers] = useState(null);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(saved?.isAuthenticated || false);
-  const [isNewUser, setIsNewUser] = useState(saved?.isNewUser || false);
-  const [hasSeenTour, setHasSeenTour] = useState(saved?.hasSeenTour || false);
-  const [onboardingAnswers, setOnboardingAnswers] = useState(saved?.onboardingAnswers || null);
+  const [user, setUser] = useState({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
+  const [kyc, setKyc] = useState(initialKyc);
+  const [portfolio, setPortfolio] = useState(emptyPortfolio);
+  const [userInvestments, setUserInvestments] = useState([]);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [watchlist, setWatchlist] = useState([]);
+  const [viewMode, setViewMode] = useState('chat');
 
-  const [user, setUser] = useState(saved?.user || defaultUser);
-  const [kyc, setKyc] = useState(saved?.kyc || initialKyc);
-  const [portfolio, setPortfolio] = useState(saved?.portfolio || userPortfolio);
-  const [userInvestments, setUserInvestments] = useState(
-    saved?.userInvestments || (saved?.isNewUser ? [] : activeInvestments)
-  );
-  const [walletBalance, setWalletBalance] = useState(saved?.walletBalance ?? userPortfolio.walletBalance);
-  const [notifications, setNotifications] = useState(saved?.notifications || defaultNotifications);
-  const [watchlist, setWatchlist] = useState(saved?.watchlist || []);
-  const [viewMode, setViewMode] = useState(saved?.viewMode || 'chat');
+  const [tourStep, setTourStep] = useState(null);
 
-  useEffect(() => {
-    saveState({
-      isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers,
-      user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode,
-    });
-  }, [isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, user, kyc, portfolio, userInvestments, walletBalance, notifications, watchlist, viewMode]);
+  const skipAuthEffect = useRef(false);
 
-  const login = useCallback((username, password) => {
-    const key = username.toLowerCase();
-    const record = registeredUsers[key];
-    if (!record || record.password !== password) return false;
+  // ── Load user data from Supabase after auth ──
+  const loadUserData = useCallback(async (userId) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-    setUser(record.user);
-    setPortfolio(record.portfolio);
-    setUserInvestments(activeInvestments);
-    setWalletBalance(record.portfolio.walletBalance);
+    if (profile) {
+      setUser({
+        name: profile.name || '',
+        email: profile.email || '',
+        mobile: profile.mobile || '',
+        dob: profile.dob || '',
+        referralCode: profile.referral_code || '',
+        joinedDate: profile.joined_date || '',
+      });
+
+      setPortfolio({
+        totalInvested: Number(profile.total_invested) || 0,
+        currentValue: Number(profile.current_value) || 0,
+        totalReturns: Number(profile.total_returns) || 0,
+        returnPercent: Number(profile.return_percent) || 0,
+        activeInvestments: profile.active_investments_count || 0,
+        xirr: Number(profile.xirr) || 0,
+        walletBalance: Number(profile.wallet_balance) || 0,
+      });
+      setWalletBalance(Number(profile.wallet_balance) || 0);
+
+      setKyc((prev) => ({
+        ...prev,
+        status: profile.kyc_status || 'not_started',
+        pan: { ...prev.pan, number: profile.pan_number || '', verified: !!profile.pan_number },
+        aadhaar: { ...prev.aadhaar, verified: profile.aadhaar_verified || false },
+        bank: { ...prev.bank, verified: profile.bank_verified || false },
+        currentStep: profile.kyc_status === 'verified' ? 4 : prev.currentStep,
+      }));
+
+      setOnboardingAnswers(profile.onboarding_answers || null);
+      setIsNewUser(!profile.onboarding_completed);
+      setHasSeenTour(profile.onboarding_completed || false);
+    }
+
+    const { data: investments } = await supabase
+      .from('investments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (investments) {
+      setUserInvestments(investments.map((inv) => ({
+        id: inv.id,
+        opportunityId: inv.opportunity_id,
+        name: inv.name,
+        productType: inv.product_type,
+        amountInvested: Number(inv.amount_invested),
+        currentValue: Number(inv.current_value),
+        returnsEarned: Number(inv.returns_earned),
+        returnPercent: Number(inv.return_percent),
+        startDate: inv.start_date,
+        maturityDate: inv.maturity_date,
+        nextRepayment: inv.next_repayment,
+        status: inv.status,
+      })));
+    }
+
+    const { data: watchlistData } = await supabase
+      .from('watchlist')
+      .select('opportunity_id')
+      .eq('user_id', userId);
+
+    if (watchlistData) {
+      setWatchlist(watchlistData.map((w) => w.opportunity_id));
+    }
+
     setNotifications(defaultNotifications);
-    setKyc(saved?.kyc?.status === 'verified' ? saved.kyc : initialKyc);
-    setWatchlist(saved?.watchlist || []);
-    setIsAuthenticated(true);
-    setIsNewUser(false);
-    setHasSeenTour(true);
-    setOnboardingAnswers(null);
-    return true;
-  }, [saved]);
+  }, []);
 
-  const loginWithDigiLocker = useCallback((name) => {
+  // ── Supabase Auth listener ──
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s?.user) {
+        setIsAuthenticated(true);
+        loadUserData(s.user.id).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (skipAuthEffect.current) {
+        skipAuthEffect.current = false;
+        return;
+      }
+      setSession(s);
+      if (s?.user) {
+        setIsAuthenticated(true);
+        loadUserData(s.user.id);
+      } else {
+        setIsAuthenticated(false);
+        resetState();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadUserData]);
+
+  function resetState() {
+    setUser({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
+    setKyc(initialKyc);
+    setPortfolio(emptyPortfolio);
+    setUserInvestments([]);
+    setWalletBalance(0);
+    setNotifications([]);
+    setWatchlist([]);
+    setIsNewUser(false);
+    setHasSeenTour(false);
+    setOnboardingAnswers(null);
+    setViewMode('chat');
+    setTourStep(null);
+  }
+
+  // ── Auth actions ──
+  const login = useCallback(async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { success: false, error: error.message };
+    await loadUserData(data.user.id);
+    return { success: true };
+  }, [loadUserData]);
+
+  const signUp = useCallback(async (email, password, name) => {
+    skipAuthEffect.current = true;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { success: false, error: error.message };
+
+    const userId = data.user.id;
+    const referralCode = `YIELD-${(name || 'NEW').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`;
+    const joinedDate = new Date().toISOString().split('T')[0];
+
+    await supabase.from('profiles').insert({
+      id: userId,
+      name: name || 'Investor',
+      email,
+      referral_code: referralCode,
+      joined_date: joinedDate,
+      kyc_status: 'not_started',
+      onboarding_completed: false,
+    });
+
     const newUser = {
-      name: name || 'DigiLocker User',
-      email: '',
+      name: name || 'Investor',
+      email,
       mobile: '',
       dob: '',
-      referralCode: `YIELD-${(name || 'DL').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`,
-      joinedDate: new Date().toISOString().split('T')[0],
+      referralCode,
+      joinedDate,
     };
+
+    setUser(newUser);
+    setPortfolio(emptyPortfolio);
+    setUserInvestments([]);
+    setWalletBalance(0);
+    setKyc(initialKyc);
+    setNotifications([
+      { id: 'n-welcome', type: 'info', title: 'Welcome to YieldVest!', message: `Hi ${newUser.name}, start by completing your KYC and exploring investment opportunities.`, time: 'Just now', read: false },
+    ]);
+    setWatchlist([]);
+    setOnboardingAnswers(null);
+    setIsAuthenticated(true);
+    setIsNewUser(true);
+    setHasSeenTour(false);
+    setTourStep(0);
+    setViewMode('standard');
+
+    return { success: true, user: data.user };
+  }, []);
+
+  const registerNewUser = useCallback(async (name, answers) => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const profile = computeInvestorProfile(answers);
+    const riskLevel = profile ? quadrantToRiskLevel(profile.quadrant) : 'low';
+
+    await supabase.from('profiles').update({
+      name,
+      onboarding_answers: answers,
+      onboarding_completed: true,
+      investor_quadrant: profile?.quadrant || null,
+      risk_level: riskLevel,
+      tolerance_score: profile?.toleranceScore || null,
+      capacity_score: profile?.capacityScore || null,
+      sophistication_level: profile?.sophisticationLevel || null,
+      horizon_level: profile?.horizonLevel || null,
+      investment_goal: profile?.goal || null,
+    }).eq('id', userId);
+
+    setUser((prev) => ({ ...prev, name: name || prev.name }));
+    setOnboardingAnswers(answers);
+    setIsNewUser(true);
+    setHasSeenTour(false);
+    setTourStep(0);
+    setViewMode('standard');
+  }, [session]);
+
+  const loginWithDigiLocker = useCallback(async (name, email, password) => {
+    skipAuthEffect.current = true;
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) return { success: false, error: error.message };
+
+    const userId = data.user.id;
+    const referralCode = `YIELD-${(name || 'DL').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`;
+    const joinedDate = new Date().toISOString().split('T')[0];
+
+    await supabase.from('profiles').insert({
+      id: userId,
+      name: name || 'DigiLocker User',
+      email,
+      referral_code: referralCode,
+      joined_date: joinedDate,
+      kyc_status: 'in_progress',
+      aadhaar_verified: true,
+      onboarding_completed: false,
+    });
+
+    const newUser = {
+      name: name || 'DigiLocker User',
+      email,
+      mobile: '',
+      dob: '',
+      referralCode,
+      joinedDate,
+    };
+
     setUser(newUser);
     setPortfolio(emptyPortfolio);
     setUserInvestments([]);
@@ -176,58 +366,17 @@ export function AppProvider({ children }) {
     setHasSeenTour(false);
     setTourStep(0);
     setOnboardingAnswers(null);
+
+    return { success: true };
   }, []);
 
-  const registerNewUser = useCallback((name, answers) => {
-    const newUser = {
-      name: name || 'Investor',
-      email: '',
-      mobile: '',
-      dob: '',
-      referralCode: `YIELD-${(name || 'NEW').substring(0, 3).toUpperCase()}${Math.floor(Math.random() * 100)}`,
-      joinedDate: new Date().toISOString().split('T')[0],
-    };
-    setUser(newUser);
-    setPortfolio(emptyPortfolio);
-    setUserInvestments([]);
-    setWalletBalance(0);
-    setKyc(initialKyc);
-    setNotifications([
-      { id: 'n-welcome', type: 'info', title: 'Welcome to YieldVest!', message: `Hi ${newUser.name}, start by completing your KYC and exploring investment opportunities.`, time: 'Just now', read: false },
-    ]);
-    setWatchlist([]);
-    setOnboardingAnswers(answers);
-    setIsAuthenticated(true);
-    setIsNewUser(true);
-    setHasSeenTour(false);
-    setTourStep(0);
-    setViewMode('standard');
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem('yieldvest_onboarding');
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
+    resetState();
     setIsAuthenticated(false);
-    setIsNewUser(false);
-    setHasSeenTour(false);
-    setTourStep(null);
-    setOnboardingAnswers(null);
-    setUser(defaultUser);
-    setKyc(initialKyc);
-    setPortfolio(userPortfolio);
-    setUserInvestments(activeInvestments);
-    setWalletBalance(userPortfolio.walletBalance);
-    setNotifications(defaultNotifications);
-    setWatchlist([]);
-    setViewMode('chat');
   }, []);
 
-  const [tourStep, setTourStep] = useState(() => {
-    if (saved?.hasSeenTour) return null;
-    if (saved?.isNewUser && !saved?.hasSeenTour) return 0;
-    return null;
-  });
-
+  // ── Tour ──
   const completeTour = useCallback(() => {
     setHasSeenTour(true);
     setTourStep(null);
@@ -245,6 +394,7 @@ export function AppProvider({ children }) {
     });
   }, []);
 
+  // ── KYC ──
   const updateKyc = useCallback((updates) => {
     setKyc((prev) => ({ ...prev, ...updates }));
   }, []);
@@ -266,29 +416,59 @@ export function AppProvider({ children }) {
     });
   }, []);
 
-  const verifyKyc = useCallback(() => {
+  const verifyKyc = useCallback(async () => {
     setKyc((prev) => ({ ...prev, status: 'verified' }));
-  }, []);
 
-  const toggleWatchlist = useCallback((opportunityId) => {
-    setWatchlist((prev) =>
-      prev.includes(opportunityId)
-        ? prev.filter((id) => id !== opportunityId)
-        : [...prev, opportunityId]
-    );
-  }, []);
+    const userId = session?.user?.id;
+    if (userId) {
+      await supabase.from('profiles').update({
+        kyc_status: 'verified',
+        pan_number: kyc.pan.number || null,
+        aadhaar_verified: kyc.aadhaar.verified,
+        bank_verified: kyc.bank.verified,
+      }).eq('id', userId);
+    }
+  }, [session, kyc]);
 
+  const persistKycStatus = useCallback(async (status, extraFields = {}) => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+    await supabase.from('profiles').update({
+      kyc_status: status,
+      ...extraFields,
+    }).eq('id', userId);
+  }, [session]);
+
+  // ── Watchlist ──
+  const toggleWatchlist = useCallback(async (opportunityId) => {
+    const userId = session?.user?.id;
+    const isInWatchlist = watchlist.includes(opportunityId);
+
+    if (isInWatchlist) {
+      setWatchlist((prev) => prev.filter((id) => id !== opportunityId));
+      if (userId) {
+        await supabase.from('watchlist').delete().eq('user_id', userId).eq('opportunity_id', opportunityId);
+      }
+    } else {
+      setWatchlist((prev) => [...prev, opportunityId]);
+      if (userId) {
+        await supabase.from('watchlist').insert({ user_id: userId, opportunity_id: opportunityId });
+      }
+    }
+  }, [session, watchlist]);
+
+  // ── Notifications ──
   const markNotificationRead = useCallback((id) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   }, []);
 
   const markAllNotificationsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 
-  const createInvestment = useCallback(({ opportunity, amount, paymentMethod }) => {
+  // ── Investments ──
+  const createInvestment = useCallback(async ({ opportunity, amount, paymentMethod }) => {
+    const userId = session?.user?.id;
     const now = new Date();
     const maturityDate = new Date(now);
     maturityDate.setMonth(maturityDate.getMonth() + opportunity.tenureMonths);
@@ -300,18 +480,37 @@ export function AppProvider({ children }) {
     }
 
     const expectedReturns = Math.round(amount * (opportunity.returnRate / 100) * (opportunity.tenureMonths / 12));
-    const investment = {
-      id: `inv-${Date.now().toString(36)}`,
-      opportunityId: opportunity.id,
+
+    const investmentRow = {
+      user_id: userId,
+      opportunity_id: opportunity.id,
       name: `${opportunity.issuer} ${opportunity.productType}`,
+      product_type: opportunity.productType,
+      amount_invested: amount,
+      current_value: amount,
+      returns_earned: 0,
+      return_percent: 0,
+      start_date: now.toISOString().split('T')[0],
+      maturity_date: maturityDate.toISOString().split('T')[0],
+      next_repayment: nextRepayment.toISOString().split('T')[0],
+      status: 'on_track',
+      payment_method: paymentMethod,
+    };
+
+    const { data: inserted } = await supabase.from('investments').insert(investmentRow).select().single();
+
+    const investment = {
+      id: inserted?.id || `inv-${Date.now().toString(36)}`,
+      opportunityId: opportunity.id,
+      name: investmentRow.name,
       productType: opportunity.productType,
       amountInvested: amount,
       currentValue: amount,
       returnsEarned: 0,
       returnPercent: 0,
-      startDate: now.toISOString().split('T')[0],
-      maturityDate: maturityDate.toISOString().split('T')[0],
-      nextRepayment: nextRepayment.toISOString().split('T')[0],
+      startDate: investmentRow.start_date,
+      maturityDate: investmentRow.maturity_date,
+      nextRepayment: investmentRow.next_repayment,
       status: 'on_track',
     };
 
@@ -323,8 +522,7 @@ export function AppProvider({ children }) {
       const xirr = totalInvested > 0
         ? Number((((prev.xirr * prev.totalInvested) + (opportunity.returnRate * amount)) / totalInvested).toFixed(2))
         : opportunity.returnRate;
-
-      return {
+      const newPortfolio = {
         ...prev,
         totalInvested,
         currentValue,
@@ -333,6 +531,20 @@ export function AppProvider({ children }) {
         activeInvestments: (prev.activeInvestments || 0) + 1,
         xirr,
       };
+
+      if (userId) {
+        supabase.from('profiles').update({
+          total_invested: newPortfolio.totalInvested,
+          current_value: newPortfolio.currentValue,
+          total_returns: newPortfolio.totalReturns,
+          return_percent: newPortfolio.returnPercent,
+          active_investments_count: newPortfolio.activeInvestments,
+          xirr: newPortfolio.xirr,
+          wallet_balance: paymentMethod === 'wallet' ? Math.max(0, walletBalance - amount) : walletBalance,
+        }).eq('id', userId).then();
+      }
+
+      return newPortfolio;
     });
 
     if (paymentMethod === 'wallet') {
@@ -352,7 +564,52 @@ export function AppProvider({ children }) {
     ]);
 
     setIsNewUser(false);
-  }, []);
+  }, [session, walletBalance]);
+
+  // ── Profile update ──
+  const updateProfile = useCallback(async (fields) => {
+    const userId = session?.user?.id;
+    setUser((prev) => ({ ...prev, ...fields }));
+
+    if (userId) {
+      const dbFields = {};
+      if (fields.name !== undefined) dbFields.name = fields.name;
+      if (fields.email !== undefined) dbFields.email = fields.email;
+      if (fields.mobile !== undefined) dbFields.mobile = fields.mobile;
+      if (fields.dob !== undefined) dbFields.dob = fields.dob;
+      await supabase.from('profiles').update(dbFields).eq('id', userId);
+    }
+  }, [session]);
+
+  // ── Tickets ──
+  const createTicket = useCallback(async ({ category, subject, description }) => {
+    const userId = session?.user?.id;
+    if (!userId) return null;
+
+    const { data, error } = await supabase.from('tickets').insert({
+      user_id: userId,
+      category,
+      subject,
+      description,
+      status: 'open',
+    }).select().single();
+
+    if (error) return null;
+    return data;
+  }, [session]);
+
+  const fetchTickets = useCallback(async () => {
+    const userId = session?.user?.id;
+    if (!userId) return [];
+
+    const { data } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    return data || [];
+  }, [session]);
 
   const isKycVerified = kyc.status === 'verified';
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -360,11 +617,12 @@ export function AppProvider({ children }) {
   const recommendations = getRecommendations(onboardingAnswers);
 
   const value = {
+    loading,
     isAuthenticated, isNewUser, hasSeenTour, onboardingAnswers, investorProfile,
-    login, loginWithDigiLocker, registerNewUser, logout, completeTour,
+    login, signUp, loginWithDigiLocker, registerNewUser, logout, completeTour,
     tourStep, setTourStep, advanceTour,
-    user, setUser,
-    kyc, updateKyc, completeKycStep, verifyKyc, isKycVerified,
+    user, setUser, updateProfile,
+    kyc, updateKyc, completeKycStep, verifyKyc, persistKycStatus, isKycVerified,
     portfolio, setPortfolio,
     userInvestments, createInvestment,
     walletBalance, setWalletBalance,
@@ -372,6 +630,8 @@ export function AppProvider({ children }) {
     watchlist, toggleWatchlist,
     viewMode, setViewMode,
     recommendations,
+    createTicket, fetchTickets,
+    session,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
