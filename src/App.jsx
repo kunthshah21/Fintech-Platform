@@ -12,6 +12,7 @@ import Transactions from './pages/Transactions';
 import KYC from './pages/KYC';
 import Profile from './pages/Profile';
 import Support from './pages/Support';
+import Community from './pages/Community';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useApp();
@@ -37,6 +38,7 @@ function AppRoutes() {
         <Route path="marketplace" element={<Marketplace />} />
         <Route path="opportunity/:id" element={<OpportunityDetail />} />
         <Route path="portfolio" element={<Portfolio />} />
+        <Route path="community" element={<Community />} />
         <Route path="transactions" element={<Transactions />} />
         <Route path="kyc" element={<KYC />} />
         <Route path="profile" element={<Profile />} />

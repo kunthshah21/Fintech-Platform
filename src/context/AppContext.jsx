@@ -610,6 +610,144 @@ export function AppProvider({ children }) {
     return data || [];
   }, [session]);
 
+  // ── Community ──
+  const fetchCommunityPosts = useCallback(async () => {
+    const userId = session?.user?.id;
+
+    const { data: posts, error } = await supabase
+      .from('community_posts')
+      .select('*, profiles:user_id(name)')
+      .order('created_at', { ascending: false });
+
+    if (error || !posts) return [];
+
+    let likedPostIds = new Set();
+    if (userId) {
+      const { data: likes } = await supabase
+        .from('community_likes')
+        .select('post_id')
+        .eq('user_id', userId);
+      if (likes) likedPostIds = new Set(likes.map((l) => l.post_id));
+    }
+
+    return posts.map((p) => ({
+      id: p.id,
+      userId: p.user_id,
+      authorName: p.profiles?.name || 'Investor',
+      content: p.content,
+      postType: p.post_type,
+      sharedData: p.shared_data,
+      likesCount: p.likes_count,
+      commentsCount: p.comments_count,
+      likedByMe: likedPostIds.has(p.id),
+      createdAt: p.created_at,
+    }));
+  }, [session]);
+
+  const createCommunityPost = useCallback(async ({ content, postType = 'text', sharedData = null }) => {
+    const userId = session?.user?.id;
+    if (!userId || !content.trim()) return null;
+
+    const { data, error } = await supabase
+      .from('community_posts')
+      .insert({
+        user_id: userId,
+        content: content.trim(),
+        post_type: postType,
+        shared_data: sharedData,
+      })
+      .select('*, profiles:user_id(name)')
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      userId: data.user_id,
+      authorName: data.profiles?.name || 'Investor',
+      content: data.content,
+      postType: data.post_type,
+      sharedData: data.shared_data,
+      likesCount: 0,
+      commentsCount: 0,
+      likedByMe: false,
+      createdAt: data.created_at,
+    };
+  }, [session]);
+
+  const togglePostLike = useCallback(async (postId, currentlyLiked) => {
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    if (currentlyLiked) {
+      await supabase
+        .from('community_likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('user_id', userId);
+    } else {
+      await supabase
+        .from('community_likes')
+        .insert({ post_id: postId, user_id: userId });
+    }
+  }, [session]);
+
+  const fetchPostComments = useCallback(async (postId) => {
+    const { data, error } = await supabase
+      .from('community_comments')
+      .select('*, profiles:user_id(name)')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (error || !data) return [];
+
+    return data.map((c) => ({
+      id: c.id,
+      userId: c.user_id,
+      authorName: c.profiles?.name || 'Investor',
+      content: c.content,
+      createdAt: c.created_at,
+    }));
+  }, []);
+
+  const createPostComment = useCallback(async (postId, content) => {
+    const userId = session?.user?.id;
+    if (!userId || !content.trim()) return null;
+
+    const { data, error } = await supabase
+      .from('community_comments')
+      .insert({
+        post_id: postId,
+        user_id: userId,
+        content: content.trim(),
+      })
+      .select('*, profiles:user_id(name)')
+      .single();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      userId: data.user_id,
+      authorName: data.profiles?.name || 'Investor',
+      content: data.content,
+      createdAt: data.created_at,
+    };
+  }, [session]);
+
+  const deleteCommunityPost = useCallback(async (postId) => {
+    const userId = session?.user?.id;
+    if (!userId) return false;
+
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', postId)
+      .eq('user_id', userId);
+
+    return !error;
+  }, [session]);
+
   const isKycVerified = kyc.status === 'verified';
   const unreadCount = notifications.filter((n) => !n.read).length;
   const investorProfile = computeInvestorProfile(onboardingAnswers);
@@ -630,6 +768,8 @@ export function AppProvider({ children }) {
     viewMode, setViewMode,
     recommendations,
     createTicket, fetchTickets,
+    fetchCommunityPosts, createCommunityPost, togglePostLike,
+    fetchPostComments, createPostComment, deleteCommunityPost,
     session,
   };
 

@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Store, Briefcase, ArrowLeftRight, ShieldCheck, User } from 'lucide-react';
+import { LayoutDashboard, Store, Briefcase, ArrowLeftRight, ShieldCheck, User, Users } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 const BASE_TABS = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
   { to: '/dashboard/marketplace', icon: Store, label: 'Explore' },
   { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
+  { to: '/dashboard/community', icon: Users, label: 'Community' },
   { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Txns' },
 ];
 

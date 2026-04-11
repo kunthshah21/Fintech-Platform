@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   TrendingUp, LayoutDashboard, Store, Briefcase, ArrowLeftRight,
-  ShieldCheck, User, HelpCircle, LogOut,
+  ShieldCheck, User, HelpCircle, LogOut, Users,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -19,6 +19,7 @@ export default function Sidebar() {
     { to: '/dashboard', icon: LayoutDashboard, label: 'Home', end: true },
     { to: '/dashboard/marketplace', icon: Store, label: 'Marketplace' },
     { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
+    { to: '/dashboard/community', icon: Users, label: 'Community' },
     { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Transactions' },
     ...(!isKycVerified ? [{ to: '/dashboard/kyc', icon: ShieldCheck, label: 'KYC' }] : []),
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
