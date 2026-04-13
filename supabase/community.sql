@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS community_posts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE community_posts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
 
 -- 2. Community Comments
 CREATE TABLE IF NOT EXISTS community_comments (
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS community_comments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE community_comments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_comments ENABLE ROW LEVEL SECURITY;
 
 -- 3. Community Likes (one per user per post)
 CREATE TABLE IF NOT EXISTS community_likes (
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS community_likes (
   UNIQUE(post_id, user_id)
 );
 
-ALTER TABLE community_likes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_likes ENABLE ROW LEVEL SECURITY;
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_community_posts_user_id ON community_posts(user_id);

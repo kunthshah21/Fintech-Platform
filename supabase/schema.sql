@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- 2. Investments table
 CREATE TABLE IF NOT EXISTS investments (
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS investments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE investments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
 
 -- 3. Tickets table
 CREATE TABLE IF NOT EXISTS tickets (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE tickets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
 
 -- Auto-generate ticket_number as TKT-001, TKT-002, etc.
 CREATE OR REPLACE FUNCTION generate_ticket_number()
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS watchlist (
   UNIQUE(user_id, opportunity_id)
 );
 
-ALTER TABLE watchlist DISABLE ROW LEVEL SECURITY;
+ALTER TABLE watchlist ENABLE ROW LEVEL SECURITY;
 
 -- Indexes for fast lookups
 CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS community_posts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE community_posts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
 
 -- 7. Community Comments
 CREATE TABLE IF NOT EXISTS community_comments (
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS community_comments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE community_comments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_comments ENABLE ROW LEVEL SECURITY;
 
 -- 8. Community Likes
 CREATE TABLE IF NOT EXISTS community_likes (
@@ -180,7 +180,7 @@ CREATE TABLE IF NOT EXISTS community_likes (
   UNIQUE(post_id, user_id)
 );
 
-ALTER TABLE community_likes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE community_likes ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_community_posts_user_id ON community_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_community_posts_created_at ON community_posts(created_at DESC);
@@ -247,3 +247,209 @@ CREATE OR REPLACE TRIGGER trg_community_comments_delete
   AFTER DELETE ON community_comments
   FOR EACH ROW
   EXECUTE FUNCTION decrement_comments_count();
+
+-- ============================================================
+-- 9. RLS Policies
+-- ============================================================
+
+-- Profiles
+DROP POLICY IF EXISTS profiles_select_own ON profiles;
+DROP POLICY IF EXISTS profiles_insert_own_investor_profile ON profiles;
+DROP POLICY IF EXISTS profiles_update_own ON profiles;
+
+CREATE POLICY profiles_select_own
+  ON profiles
+  FOR SELECT
+  TO authenticated
+  USING (id = auth.uid());
+
+CREATE POLICY profiles_insert_own_investor_profile
+  ON profiles
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (id = auth.uid());
+
+CREATE POLICY profiles_update_own
+  ON profiles
+  FOR UPDATE
+  TO authenticated
+  USING (id = auth.uid())
+  WITH CHECK (id = auth.uid());
+
+-- Investments
+DROP POLICY IF EXISTS investments_select_own ON investments;
+DROP POLICY IF EXISTS investments_insert_own ON investments;
+DROP POLICY IF EXISTS investments_update_own ON investments;
+DROP POLICY IF EXISTS investments_delete_own ON investments;
+
+CREATE POLICY investments_select_own
+  ON investments
+  FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY investments_insert_own
+  ON investments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY investments_update_own
+  ON investments
+  FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY investments_delete_own
+  ON investments
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Tickets
+DROP POLICY IF EXISTS tickets_select_own ON tickets;
+DROP POLICY IF EXISTS tickets_insert_own ON tickets;
+DROP POLICY IF EXISTS tickets_update_own ON tickets;
+DROP POLICY IF EXISTS tickets_delete_own ON tickets;
+
+CREATE POLICY tickets_select_own
+  ON tickets
+  FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY tickets_insert_own
+  ON tickets
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY tickets_update_own
+  ON tickets
+  FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY tickets_delete_own
+  ON tickets
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Watchlist
+DROP POLICY IF EXISTS watchlist_select_own ON watchlist;
+DROP POLICY IF EXISTS watchlist_insert_own ON watchlist;
+DROP POLICY IF EXISTS watchlist_update_own ON watchlist;
+DROP POLICY IF EXISTS watchlist_delete_own ON watchlist;
+
+CREATE POLICY watchlist_select_own
+  ON watchlist
+  FOR SELECT
+  TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY watchlist_insert_own
+  ON watchlist
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY watchlist_update_own
+  ON watchlist
+  FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY watchlist_delete_own
+  ON watchlist
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Community posts
+DROP POLICY IF EXISTS community_posts_select_authenticated ON community_posts;
+DROP POLICY IF EXISTS community_posts_insert_own ON community_posts;
+DROP POLICY IF EXISTS community_posts_update_own ON community_posts;
+DROP POLICY IF EXISTS community_posts_delete_own ON community_posts;
+
+CREATE POLICY community_posts_select_authenticated
+  ON community_posts
+  FOR SELECT
+  TO authenticated
+  USING (TRUE);
+
+CREATE POLICY community_posts_insert_own
+  ON community_posts
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY community_posts_update_own
+  ON community_posts
+  FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY community_posts_delete_own
+  ON community_posts
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Community comments
+DROP POLICY IF EXISTS community_comments_select_authenticated ON community_comments;
+DROP POLICY IF EXISTS community_comments_insert_own ON community_comments;
+DROP POLICY IF EXISTS community_comments_update_own ON community_comments;
+DROP POLICY IF EXISTS community_comments_delete_own ON community_comments;
+
+CREATE POLICY community_comments_select_authenticated
+  ON community_comments
+  FOR SELECT
+  TO authenticated
+  USING (TRUE);
+
+CREATE POLICY community_comments_insert_own
+  ON community_comments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY community_comments_update_own
+  ON community_comments
+  FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY community_comments_delete_own
+  ON community_comments
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
+
+-- Community likes
+DROP POLICY IF EXISTS community_likes_select_authenticated ON community_likes;
+DROP POLICY IF EXISTS community_likes_insert_own ON community_likes;
+DROP POLICY IF EXISTS community_likes_delete_own ON community_likes;
+
+CREATE POLICY community_likes_select_authenticated
+  ON community_likes
+  FOR SELECT
+  TO authenticated
+  USING (TRUE);
+
+CREATE POLICY community_likes_insert_own
+  ON community_likes
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY community_likes_delete_own
+  ON community_likes
+  FOR DELETE
+  TO authenticated
+  USING (user_id = auth.uid());
