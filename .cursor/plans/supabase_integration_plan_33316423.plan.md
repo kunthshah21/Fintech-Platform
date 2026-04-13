@@ -140,7 +140,7 @@ erDiagram
 ```
 VITE_SUPABASE_URL=https://oomkjuzjyccfhtguuytp.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_SQSBapi7Qhfhd1sl0_AANA_37dIr4SN
-SUPABASE_SECRET_KEY=sb_secret_hdA8LX1JN0aNrrHiaCiqAQ_cxLwWUSP
+SUPABASE_SECRET_KEY=<REDACTED_NEVER_COMMIT_SECRETS>
 ```
 
 ### 2. `src/lib/supabase.js` -- Supabase client initialization
