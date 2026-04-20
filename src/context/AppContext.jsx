@@ -166,7 +166,7 @@ export function AppProvider({ children }) {
       .order('created_at', { ascending: false });
 
     if (investments) {
-      setUserInvestments(investments.map((inv) => ({
+      const mapped = investments.map((inv) => ({
         id: inv.id,
         opportunityId: inv.opportunity_id,
         name: inv.name,
@@ -179,7 +179,9 @@ export function AppProvider({ children }) {
         maturityDate: inv.maturity_date,
         nextRepayment: inv.next_repayment,
         status: inv.status,
-      })));
+      }));
+      setUserInvestments(mapped);
+      if (mapped.length > 0) setIsNewUser(false);
     }
 
     const { data: watchlistData } = await supabase
@@ -316,7 +318,7 @@ export function AppProvider({ children }) {
 
     setUser((prev) => ({ ...prev, name: name || prev.name }));
     setOnboardingAnswers(answers);
-    setIsNewUser(true);
+    setIsNewUser(false);
     setHasSeenTour(false);
     setTourStep(0);
     setViewMode('standard');

@@ -1,7 +1,8 @@
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { allocationData } from '../../data/mockData';
 import { useApp } from '../../context/AppContext';
+
+const COLORS = ['#18181B', '#6B7280', '#059669', '#9CA3AF', '#D1D5DB'];
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -15,10 +16,21 @@ function CustomTooltip({ active, payload }) {
 }
 
 export default function AllocationDonut() {
-  const { isNewUser } = useApp();
+  const { isNewUser, userInvestments } = useApp();
+
+  const allocationData = userInvestments.reduce((acc, inv) => {
+    const existing = acc.find((d) => d.name === inv.productType);
+    if (existing) {
+      existing.value += Number(inv.amountInvested) || 0;
+    } else {
+      acc.push({ name: inv.productType, value: Number(inv.amountInvested) || 0 });
+    }
+    return acc;
+  }, []).map((d, idx) => ({ ...d, color: COLORS[idx % COLORS.length] }));
+
   const total = allocationData.reduce((s, d) => s + d.value, 0);
 
-  if (isNewUser) {
+  if (isNewUser || allocationData.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-white p-5">
         <h3 className="text-sm font-semibold text-text-primary mb-4">Asset allocation</h3>
