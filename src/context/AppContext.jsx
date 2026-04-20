@@ -416,17 +416,20 @@ export function AppProvider({ children }) {
   }, []);
 
   const verifyKyc = useCallback(async () => {
-    setKyc((prev) => ({ ...prev, status: 'verified' }));
-
     const userId = session?.user?.id;
-    if (userId) {
-      await supabase.from('profiles').update({
-        kyc_status: 'verified',
-        pan_number: kyc.pan.number || null,
-        aadhaar_verified: kyc.aadhaar.verified,
-        bank_verified: kyc.bank.verified,
-      }).eq('id', userId);
-    }
+    if (!userId) return false;
+
+    const { error } = await supabase.from('profiles').update({
+      kyc_status: 'verified',
+      pan_number: kyc.pan.number || null,
+      aadhaar_verified: kyc.aadhaar.verified,
+      bank_verified: kyc.bank.verified,
+    }).eq('id', userId);
+
+    if (error) return false;
+
+    setKyc((prev) => ({ ...prev, status: 'verified' }));
+    return true;
   }, [session, kyc]);
 
   const persistKycStatus = useCallback(async (status, extraFields = {}) => {

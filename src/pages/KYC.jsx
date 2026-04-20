@@ -377,9 +377,9 @@ function ReviewStep({ kyc, onSubmit }) {
 
   const handleSubmit = () => {
     setSubmitting(true);
-    setTimeout(() => {
+    setTimeout(async () => {
+      await onSubmit();
       setSubmitting(false);
-      onSubmit();
     }, 2500);
   };
 
@@ -468,12 +468,10 @@ export default function KYC() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     completeKycStep(3, {});
-    setTimeout(() => {
-      verifyKyc();
-      setShowSuccess(true);
-    }, 100);
+    const success = await verifyKyc();
+    if (success) setShowSuccess(true);
   };
 
   if (isKycVerified || showSuccess) {
