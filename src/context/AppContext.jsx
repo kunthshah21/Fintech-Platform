@@ -114,7 +114,6 @@ export function AppProvider({ children }) {
   const [viewMode, setViewMode] = useState('chat');
   const [tourStep, setTourStep] = useState(null);
 
-  const skipAuthEffect = useRef(false);
   const activeLoadIdRef = useRef(0);
 
   const resetState = useCallback(() => {
@@ -136,6 +135,7 @@ export function AppProvider({ children }) {
   const loadUserData = useCallback(async (userId) => {
     const loadId = ++activeLoadIdRef.current;
     const isStaleLoad = () => activeLoadIdRef.current !== loadId;
+    console.debug('[AppContext] loadUserData:start', { userId, loadId });
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -144,6 +144,14 @@ export function AppProvider({ children }) {
       .single();
 
     if (isStaleLoad()) return;
+
+    console.debug('[AppContext] loadUserData:profile', {
+      requestedUserId: userId,
+      profileId: profile?.id ?? null,
+      profileEmail: profile?.email ?? null,
+      profileName: profile?.name ?? null,
+      loadId,
+    });
 
     if (profile) {
       setUser({
@@ -231,11 +239,21 @@ export function AppProvider({ children }) {
     }
 
     setNotifications(defaultNotifications);
+    console.debug('[AppContext] loadUserData:done', {
+      userId,
+      investmentsCount: investments?.length ?? 0,
+      watchlistCount: watchlistData?.length ?? 0,
+      loadId,
+    });
   }, []);
 
   // ── Supabase Auth listener ──
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      console.debug('[AppContext] getSession', {
+        sessionUserId: s?.user?.id ?? null,
+        sessionEmail: s?.user?.email ?? null,
+      });
       setSession(s);
       if (s?.user) {
         setIsAuthenticated(true);
@@ -247,10 +265,11 @@ export function AppProvider({ children }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
-      if (skipAuthEffect.current) {
-        skipAuthEffect.current = false;
-        return;
-      }
+      console.debug('[AppContext] onAuthStateChange', {
+        event: _event,
+        sessionUserId: s?.user?.id ?? null,
+        sessionEmail: s?.user?.email ?? null,
+      });
       setSession(s);
       if (s?.user) {
         setIsAuthenticated(true);
@@ -268,14 +287,19 @@ export function AppProvider({ children }) {
 
   // ── Auth actions ──
   const login = useCallback(async (email, password) => {
+    console.debug('[AppContext] login:attempt', { email });
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { success: false, error: error.message };
+    console.debug('[AppContext] login:success', {
+      authUserId: data.user.id,
+      authEmail: data.user.email,
+    });
     await loadUserData(data.user.id);
     return { success: true };
   }, [loadUserData]);
 
   const signUp = useCallback(async (email, password, name) => {
-    skipAuthEffect.current = true;
+    console.debug('[AppContext] signUp:attempt', { email, name });
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { success: false, error: error.message };
 
@@ -350,7 +374,7 @@ export function AppProvider({ children }) {
   }, [session]);
 
   const loginWithDigiLocker = useCallback(async (name, email, password) => {
-    skipAuthEffect.current = true;
+    console.debug('[AppContext] loginWithDigiLocker:attempt', { email, name });
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { success: false, error: error.message };
 
@@ -397,11 +421,16 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    console.debug('[AppContext] logout:start', {
+      currentSessionUserId: session?.user?.id ?? null,
+      currentSessionEmail: session?.user?.email ?? null,
+    });
     activeLoadIdRef.current += 1;
     await supabase.auth.signOut();
     resetState();
     setIsAuthenticated(false);
-  }, [resetState]);
+    console.debug('[AppContext] logout:done');
+  }, [resetState, session]);
 
   // ── Tour ──
   const completeTour = useCallback(() => {
