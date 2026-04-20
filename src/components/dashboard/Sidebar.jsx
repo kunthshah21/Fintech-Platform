@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  TrendingUp, LayoutDashboard, Store, Briefcase, ArrowLeftRight,
+  TrendingUp, LayoutDashboard, Store, Briefcase,
   ShieldCheck, User, HelpCircle, LogOut, Users,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -20,7 +20,6 @@ export default function Sidebar() {
     { to: '/dashboard/marketplace', icon: Store, label: 'Marketplace' },
     { to: '/dashboard/portfolio', icon: Briefcase, label: 'Portfolio' },
     { to: '/dashboard/community', icon: Users, label: 'Community' },
-    { to: '/dashboard/transactions', icon: ArrowLeftRight, label: 'Transactions' },
     ...(!isKycVerified ? [{ to: '/dashboard/kyc', icon: ShieldCheck, label: 'KYC' }] : []),
     { to: '/dashboard/profile', icon: User, label: 'Profile' },
     { to: '/dashboard/support', icon: HelpCircle, label: 'Support' },
