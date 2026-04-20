@@ -115,14 +115,35 @@ export function AppProvider({ children }) {
   const [tourStep, setTourStep] = useState(null);
 
   const skipAuthEffect = useRef(false);
+  const activeLoadIdRef = useRef(0);
+
+  const resetState = useCallback(() => {
+    setUser({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
+    setKyc(initialKyc);
+    setPortfolio(emptyPortfolio);
+    setUserInvestments([]);
+    setWalletBalance(0);
+    setNotifications([]);
+    setWatchlist([]);
+    setIsNewUser(false);
+    setHasSeenTour(false);
+    setOnboardingAnswers(null);
+    setViewMode('chat');
+    setTourStep(null);
+  }, []);
 
   // ── Load user data from Supabase after auth ──
   const loadUserData = useCallback(async (userId) => {
+    const loadId = ++activeLoadIdRef.current;
+    const isStaleLoad = () => activeLoadIdRef.current !== loadId;
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
+
+    if (isStaleLoad()) return;
 
     if (profile) {
       setUser({
@@ -157,6 +178,14 @@ export function AppProvider({ children }) {
       setOnboardingAnswers(profile.onboarding_answers || null);
       setIsNewUser(!profile.onboarding_completed);
       setHasSeenTour(profile.onboarding_completed || false);
+    } else {
+      // Ensure an account switch cannot show a previous user's identity.
+      setUser((prev) => ({ ...prev, name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' }));
+      setPortfolio(emptyPortfolio);
+      setWalletBalance(0);
+      setOnboardingAnswers(null);
+      setIsNewUser(true);
+      setHasSeenTour(false);
     }
 
     const { data: investments } = await supabase
@@ -164,6 +193,8 @@ export function AppProvider({ children }) {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
+
+    if (isStaleLoad()) return;
 
     if (investments) {
       const mapped = investments.map((inv) => ({
@@ -182,6 +213,8 @@ export function AppProvider({ children }) {
       }));
       setUserInvestments(mapped);
       if (mapped.length > 0) setIsNewUser(false);
+    } else {
+      setUserInvestments([]);
     }
 
     const { data: watchlistData } = await supabase
@@ -189,8 +222,12 @@ export function AppProvider({ children }) {
       .select('opportunity_id')
       .eq('user_id', userId);
 
+    if (isStaleLoad()) return;
+
     if (watchlistData) {
       setWatchlist(watchlistData.map((w) => w.opportunity_id));
+    } else {
+      setWatchlist([]);
     }
 
     setNotifications(defaultNotifications);
@@ -202,6 +239,7 @@ export function AppProvider({ children }) {
       setSession(s);
       if (s?.user) {
         setIsAuthenticated(true);
+        resetState();
         loadUserData(s.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -216,30 +254,17 @@ export function AppProvider({ children }) {
       setSession(s);
       if (s?.user) {
         setIsAuthenticated(true);
+        resetState();
         loadUserData(s.user.id);
       } else {
+        activeLoadIdRef.current += 1;
         setIsAuthenticated(false);
         resetState();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [loadUserData]);
-
-  function resetState() {
-    setUser({ name: '', email: '', mobile: '', dob: '', referralCode: '', joinedDate: '' });
-    setKyc(initialKyc);
-    setPortfolio(emptyPortfolio);
-    setUserInvestments([]);
-    setWalletBalance(0);
-    setNotifications([]);
-    setWatchlist([]);
-    setIsNewUser(false);
-    setHasSeenTour(false);
-    setOnboardingAnswers(null);
-    setViewMode('chat');
-    setTourStep(null);
-  }
+  }, [loadUserData, resetState]);
 
   // ── Auth actions ──
   const login = useCallback(async (email, password) => {
@@ -372,10 +397,11 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    activeLoadIdRef.current += 1;
     await supabase.auth.signOut();
     resetState();
     setIsAuthenticated(false);
-  }, []);
+  }, [resetState]);
 
   // ── Tour ──
   const completeTour = useCallback(() => {
